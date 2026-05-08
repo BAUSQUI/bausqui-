@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+
+    <title>BAUSQUI — Bautista Ausqui · Creative Technologist</title>
+    <meta name="description" content="Portfolio of Bautista Ausqui — designer working at the intersection of design and technology. Web · 3D · Visuals. Based in Buenos Aires." />
+    <meta name="author" content="Bautista Ausqui" />
+    <link rel="canonical" href="https://bausqui.com/" />
+
+    <!-- Open Graph / social cards -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BAUSQUI" />
+    <meta property="og:title" content="BAUSQUI — Bautista Ausqui · Creative Technologist" />
+    <meta property="og:description" content="Portfolio of Bautista Ausqui — designer working at the intersection of design and technology. Web · 3D · Visuals. Based in Buenos Aires." />
+    <meta property="og:url" content="https://bausqui.com/" />
+    <meta property="og:image" content="https://bausqui.com/favicon.png" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BAUSQUI — Bautista Ausqui" />
+    <meta name="twitter:description" content="Designer working at the intersection of design and technology. Web · 3D · Visuals." />
+    <meta name="twitter:image" content="https://bausqui.com/favicon.png" />
+
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  </head>
+  <body>
+
+<!-- LOADER -->
+<div id="loader">
+  <canvas id="loader-canvas"></canvas>
+
+  <span class="loader-mark loader-mark-tl">B/A — BAUSQUI ©</span>
+  <span class="loader-mark loader-mark-tr" data-es="INICIALIZANDO" data-en="INITIALIZING">INICIALIZANDO</span>
+  <span class="loader-mark loader-mark-bl">EST. 2003</span>
+  <span class="loader-mark loader-mark-br">BUENOS AIRES · AR</span>
+
+  <div class="loader-center">
+    <span class="loader-eyebrow" data-es="✱ CARGANDO ESCENA" data-en="✱ LOADING SCENE">✱ CARGANDO ESCENA</span>
+    <div class="loader-numbers">
+      <span id="loader-pct">00</span><span class="loader-pct-sym">%</span>
+    </div>
+    <ul class="loader-checklist">
+      <li data-key="fonts"   data-es="TIPOGRAFÍA"  data-en="TYPEFACE">TIPOGRAFÍA</li>
+      <li data-key="flor"    data-es="3D · FLOR"  data-en="3D · FLOR">3D · FLOR</li>
+      <li data-key="bauti"   data-es="3D · BAUTI" data-en="3D · BAUTI">3D · BAUTI</li>
+      <li data-key="bgvideo" data-es="VIDEO"      data-en="VIDEO">VIDEO</li>
+      <li data-key="music"   data-es="AUDIO"      data-en="AUDIO">AUDIO</li>
+    </ul>
+  </div>
+
+  <div class="loader-bar-bottom"><span id="loader-bar-fill"></span></div>
+</div>
+<script>
+  // Loader: particle animation + asset progress tracking
+  (function () {
+    const KEYS = ['fonts', 'flor', 'bauti', 'music', 'bgvideo'];
+    const done = Object.create(null);
+    KEYS.forEach(k => (done[k] = false));
+    let displayed = 0; // smoothed % shown to user
+    let target = 0;    // actual loaded ratio
+    let hidden = false;
+
+    const loaderEl = document.getElementById('loader');
+    const pctEl = document.getElementById('loader-pct');
+    const fillEl = document.getElementById('loader-bar-fill');
+    const canvas = document.getElementById('loader-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function fit() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    fit();
+    window.addEventListener('resize', fit);
+
+    // Particles drift in 2D space, blue-white tones
+    const N = 110;
+    const ps = [];
+    for (let i = 0; i < N; i++) {
+      ps.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: 1 + Math.random() * 2.2,
+        a: 0.25 + Math.random() * 0.6,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    function frame() {
+      requestAnimationFrame(frame);
+      const W = window.innerWidth, H = window.innerHeight;
+      ctx.clearRect(0, 0, W, H);
+      const t = performance.now() / 1000;
+      const cx = W / 2, cy = H / 2;
+
+      // Smooth percent toward target
+      displayed += (target - displayed) * 0.08;
+      const pctNum = Math.min(100, Math.round(displayed * 100));
+      if (pctEl) pctEl.textContent = pctNum < 10 ? '0' + pctNum : String(pctNum);
+      if (fillEl) fillEl.style.width = pctNum + '%';
+
+      for (const p of ps) {
+        // Gentle drift + slight pull toward center as progress grows
+        const pull = displayed * 0.5;
+        p.vx += (cx - p.x) * 0.00002 * pull;
+        p.vy += (cy - p.y) * 0.00002 * pull;
+        p.x += p.vx + Math.sin(t + p.phase) * 0.15;
+        p.y += p.vy + Math.cos(t + p.phase) * 0.15;
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+        if (p.y < -10) p.y = H + 10;
+        if (p.y > H + 10) p.y = -10;
+
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
+        g.addColorStop(0, 'rgba(120, 170, 255,' + p.a + ')');
+        g.addColorStop(1, 'rgba(120, 170, 255, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    frame();
+
+    function recompute() {
+      let count = 0;
+      KEYS.forEach(k => { if (done[k]) count++; });
+      target = count / KEYS.length;
+      if (count >= KEYS.length) hide();
+    }
+
+    function hide() {
+      if (hidden) return;
+      hidden = true;
+      // Wait for the bar to visually catch up before fading
+      setTimeout(() => {
+        loaderEl.classList.add('is-hidden');
+        setTimeout(() => loaderEl && loaderEl.parentNode && loaderEl.parentNode.removeChild(loaderEl), 1000);
+      }, 500);
+    }
+
+    // Public API for main.js
+    window.__loaderDone = function (key) {
+      if (!(key in done) || done[key]) return;
+      done[key] = true;
+      const li = document.querySelector('.loader-checklist li[data-key="' + key + '"]');
+      if (li) li.classList.add('is-done');
+      recompute();
+    };
+
+    // Safety: never block the user forever — force-hide after 10s
+    setTimeout(() => {
+      KEYS.forEach(k => (done[k] = true));
+      target = 1;
+      hide();
+    }, 10000);
+
+    // Fonts
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => window.__loaderDone('fonts'));
+    } else {
+      window.__loaderDone('fonts');
+    }
+  })();
+</script>
+
+<!-- BACK TO TOP (only visible inside a project) -->
+<button id="back-top" aria-label="Back to top">↑</button>
+
+<!-- LANG TOGGLE -->
+<div class="lang-toggle" id="lang-toggle">
+  <button data-lang="es" class="active">ES</button>
+  <span>/</span>
+  <button data-lang="en">EN</button>
+</div>
+
+<!-- BACKGROUND MUSIC -->
+<audio id="bg-music" src="/music-port.mp3" loop preload="auto" crossorigin="anonymous"></audio>
+<button class="music-toggle" id="music-toggle" aria-label="Toggle music">
+  <canvas id="music-viz" width="84" height="22"></canvas>
+</button>
+
+<!-- ESC HINT (visible when inside a project or info overlay) -->
+<span id="esc-hint" data-es="PRESIONÁ ESC PARA SALIR" data-en="PRESS ESC TO EXIT">PRESIONÁ ESC PARA SALIR</span>
+
+<!-- NAV CARDS -->
+<nav class="nav-grid">
+  <a href="#about" data-overlay="about" class="nav-card">
+    <div class="card-tag-row">
+      <span class="card-tag">:)</span>
+
+    </div>
+    <span class="card-title" data-es="Sobre mí" data-en="About me">Sobre mí</span>
+  </a>
+
+  <a href="#vision" data-overlay="vision" class="nav-card">
+    <div class="card-tag-row">
+      <span class="card-tag">*</span>
+
+    </div>
+    <span class="card-title" data-es="Visión" data-en="Vision">Visión</span>
+  </a>
+
+  <a href="#contact" data-overlay="contact" class="nav-card">
+    <div class="card-tag-row">
+      <span class="card-tag">*</span>
+
+    </div>
+    <span class="card-title" data-es="Contacto" data-en="Contact">Contacto</span>
+  </a>
+
+  <a href="#home" data-overlay="home" class="nav-card">
+    <div class="card-tag-row">
+      <span class="card-tag">→</span>
+
+    </div>
+    <span class="card-title" data-es="Inicio" data-en="Home">Inicio</span>
+  </a>
+</nav>
+
+   <!-- LOGO TEXTO -->
+<!-- LOGO TYPOGRAPHIC SYSTEM -->
+<!-- LOGO TYPOGRAPHIC SYSTEM -->
+<div class="logo-container">
+
+  <!-- Top row: data above logo -->
+  <div class="logo-row logo-row-top">
+    <span data-es="TECNÓLOGO CREATIVO" data-en="CREATIVE TECHNOLOGIST">TECNÓLOGO CREATIVO</span>
+    <span class="logo-row-bar"></span>
+    <span>BAUSQUI ©</span>
+  </div>
+
+  <!-- Main animated wordmark -->
+  <h1 class="logo-text" id="logo-text">BAUSQUI</h1>
+
+  <!-- Bottom row: data below logo -->
+  <div class="logo-row logo-row-bot">
+    <span data-es="DISEÑO DESDE BUENOS AIRES" data-en="DESIGN FROM BUENOS AIRES">DISEÑO DESDE BUENOS AIRES</span>
+    <span class="logo-row-bar"></span>
+    <span>EST. 2003</span>
+  </div>
+
+  <!-- Tertiary row: extra meta -->
+  <div class="logo-row logo-row-meta">
+    <span>WEB</span>
+    <span>/</span>
+    <span>3D</span>
+    <span>/</span>
+    <span data-es="VISUALES" data-en="VISUALS">VISUALES</span>
+    <span class="logo-row-bar"></span>
+    <span>26</span>
+  </div>
+
+</div>
+
+</div>
+    <!-- SUBTÍTULO -->
+    <div class="logo-subtitle">
+      <span>Argentinian</span>
+      <span>Designer</span>
+      <span>Bautista</span>
+      <span>Ausqui</span>
+    </div>
+
+    <!-- PROYECTOS GRID — cards grandes con preview de video -->
+    <div class="proyectos-grid">
+
+      <article class="proyecto-card" data-nombre="Icosphere002" data-custom="SOMA" data-video="/videos/SOMA.webm">
+        <div class="card-tag-row">
+          <span class="card-tag" data-es="EDITORIAL" data-en="EDITORIAL">EDITORIAL</span>
+          <span class="card-year">2025</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">SOMA</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere003" data-custom="MUTANTE" data-video="/videos/mutante.webm" data-preview-start="6">
+        <div class="card-tag-row">
+          <span class="card-tag" data-es="INTERACTIVO" data-en="INTERACTIVE">INTERACTIVO</span>
+          <span class="card-year">2025</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">MUTANTE</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere005" data-custom="ARENA" data-poster="https://img.youtube.com/vi/D3SsaiTpvl8/maxresdefault.jpg">
+        <div class="card-tag-row">
+          <span class="card-tag">WEB</span>
+          <span class="card-year">2026</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">Arena</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere004" data-custom="PAPOTA" data-video="/videos/papotta.webm">
+        <div class="card-tag-row">
+          <span class="card-tag">WEB</span>
+          <span class="card-year">2025</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">PAPOTA</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere003" data-custom="IMMERSIVE" data-video="/videos/PortfolioVideo.webm" data-preview-start="10">
+        <div class="card-tag-row">
+          <span class="card-tag" data-es="INMERSIVO" data-en="IMMERSIVE">INMERSIVO</span>
+          <span class="card-year">2024</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">DUALIDAD</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere001" data-custom="GHOST PERROS" data-video="/videos/ghost.webm">
+        <div class="card-tag-row">
+          <span class="card-tag">AUDIOVISUAL</span>
+          <span class="card-year">2026</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">GHOST PERROS</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere002" data-custom="POSEIDO" data-poster="https://img.youtube.com/vi/Rm1ZafN1opc/maxresdefault.jpg">
+        <div class="card-tag-row">
+          <span class="card-tag">AUDIOVISUAL</span>
+          <span class="card-year">2025</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">POSEIDO</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere004" data-custom="TAHADIS" data-video="https://pub-a7045e01a924422c85679d03511d9cc3.r2.dev/TAHADIS.webm">
+        <div class="card-tag-row">
+          <span class="card-tag">AUDIOVISUAL</span>
+          <span class="card-year">2024</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">TAHADIS</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+      <article class="proyecto-card" data-nombre="Icosphere001" data-custom="PRIMITIVO" data-video="/videos/tiempo_real.webm">
+        <div class="card-tag-row">
+          <span class="card-tag" data-es="VISUALES" data-en="VISUALS">VISUALES</span>
+          <span class="card-year">2025</span>
+          <span class="card-details"></span>
+        </div>
+        <h3 class="card-title">TIEMPO REAL</h3>
+        <video class="card-preview" muted loop playsinline preload="none"></video>
+      </article>
+
+    </div>
+
+    <!-- FADE -->
+    <div id="fade"></div>
+
+    <!-- OVERLAY DE VIDEO -->
+    <div id="video-overlay">
+      <div id="video-scroll-container">
+        <section id="section-video">
+          <div id="video-wrapper">
+            <video id="video-player" loop playsinline></video>
+          </div>
+
+          <div id="timeline-control" aria-label="Timeline">
+            <button id="timeline-play" aria-label="Play / Pause">▶</button>
+            <span class="timeline-time" id="timeline-current">0:00</span>
+            <div id="timeline-track">
+              <div id="timeline-line"></div>
+              <div id="timeline-fill"></div>
+              <div id="timeline-thumb"></div>
+            </div>
+            <span class="timeline-time" id="timeline-duration">0:00</span>
+          </div>
+
+          <div id="video-abstract">
+            <div id="abstract-left">
+              <h2 id="abstract-titulo"></h2>
+              <p id="abstract-subtitulo"></p>
+              <p id="abstract-meta"></p>
+              <button id="sound-toggle" data-es="● ACTIVAR SONIDO" data-en="● ENABLE SOUND">● ACTIVAR SONIDO</button>
+              <div id="volume-control" aria-label="Volume">
+                <span class="volume-label" data-es="VOLUMEN" data-en="VOLUME">VOLUMEN</span>
+                <div id="volume-track">
+                  <div id="volume-line"></div>
+                  <div id="volume-fill"></div>
+                  <div id="volume-thumb"></div>
+                </div>
+              </div>
+            </div>
+            <div id="abstract-right">
+              <div id="abstract-body">
+                <p id="abstract-descripcion"></p>
+                <p id="abstract-descripcion-full" style="display:none"></p>
+              </div>
+              <div id="abstract-actions">
+                <button id="abstract-expand" data-es="LEER MÁS" data-en="READ MORE">LEER MÁS</button>
+                <button id="abstract-manual" data-es="VER MANUAL ↓" data-en="VIEW MANUAL ↓">VER MANUAL ↓</button>
+              </div>
+              <p id="abstract-autores"></p>
+            </div>
+          </div>
+
+          <p class="scroll-hint" data-es="DESLIZÁ PARA EXPLORAR / CERRAR" data-en="SCROLL TO EXPLORE / CLOSE">DESLIZÁ PARA EXPLORAR / CERRAR</p>
+        </section>
+
+        <section id="section-pdf" style="display:none">
+          <div id="pdf-header">
+            <span id="pdf-titulo"></span>
+            <span data-es="— Manual de Marca" data-en="— Brand Manual">— Manual de Marca</span>
+          </div>
+          <div id="pdf-container"></div>
+          <div id="pdf-loading" data-es="CARGANDO MANUAL..." data-en="LOADING MANUAL...">CARGANDO MANUAL...</div>
+        </section>
+
+        <section id="section-embed" style="display:none">
+          <div id="embed-header">
+            <span id="embed-titulo"></span>
+            <span data-es="— Sitio en Vivo" data-en="— Live Site">— Sitio en Vivo</span>
+            <a id="embed-open" href="#" target="_blank" rel="noopener" data-es="ABRIR ↗" data-en="OPEN ↗">ABRIR ↗</a>
+          </div>
+          <div id="embed-container"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- OVERLAY INFO: About / Vision / Contact -->
+    <div id="info-overlay">
+      <div id="info-scroll-container">
+
+        <section class="info-section" id="info-about">
+          <video class="sw-bg-video" autoplay muted loop playsinline>
+            <source src="/AUSQUI_GRIS_1.webm" type="video/webm">
+          </video>
+          <span class="sw-mark sw-mark-tl">B/A</span>
+          <span class="sw-mark sw-mark-bl">EST. 2003</span>
+          <span class="sw-mark sw-mark-br">BUENOS AIRES · AR</span>
+          <span class="sw-mark sw-mark-l">BAUSQUI ©</span>
+          <span class="sw-mark sw-mark-r" data-es="↓ VISIÓN" data-en="↓ VISION">↓ VISIÓN</span>
+
+          <p class="sw-lead"
+             data-es="Hola, soy Bautista Ausqui. Diseñador especializado en la intersección entre diseño y tecnología."
+             data-en="Hi, I'm Bautista Ausqui. Designer specialized at the intersection of design and technology.">
+            Hola, soy Bautista Ausqui. Diseñador especializado en la intersección entre diseño y tecnología.
+          </p>
+
+
+          <span class="sw-pos sw-focus" data-es="WEB / 3D / VISUALES" data-en="WEB / 3D / VISUALS">WEB / 3D / VISUALES</span>
+          <span class="sw-pos sw-tools">THREE.JS — BLENDER — TOUCHDESIGNER</span>
+          <span class="sw-pos sw-stamp"
+                data-es="UNA BREVE<br/>BIOGRAFÍA"
+                data-en="A SHORT<br/>BIOGRAPHY">UNA BREVE<br/>BIOGRAFÍA</span>
+          <span class="sw-pos sw-asterisk">✱</span>
+        </section>
+
+        <section class="info-section" id="info-vision">
+          <span class="sw-mark sw-mark-tl">B/A</span>
+
+          <span class="sw-mark sw-mark-bl">*</span>
+          <span class="sw-mark sw-mark-br" data-es="DISEÑO × TECH" data-en="DESIGN × TECH">DISEÑO × TECH</span>
+          <span class="sw-mark sw-mark-l" data-es="↑ SOBRE MÍ" data-en="↑ ABOUT ME">↑ SOBRE MÍ</span>
+          <span class="sw-mark sw-mark-r" data-es="↓ CONTACTO" data-en="↓ CONTACT">↓ CONTACTO</span>
+
+          <p class="sw-lead"
+             data-es='Creo que el diseño es <u>un puente:</u> entre problemas y soluciones, entre ideas y sentido. Encuentro en la tecnología una herramienta para mejorar experiencias y crear cosas con propósito. Y en la curiosidad, el motor para descubrir nuevas estéticas, lenguajes y posibilidades.'
+             data-en='I see design as <u>a bridge:</u> between problems and solutions, between ideas and sensemaking. I find in technology a tool to improve experiences and create things with purpose. And in curiosity, the engine to discover new aesthetics, languages and possibilities.'>
+            Creo que el diseño es <u>un puente:</u> entre problemas y soluciones, entre ideas y sentido. Encuentro en la tecnología una herramienta para mejorar experiencias y crear cosas con propósito. Y en la curiosidad, el motor para descubrir nuevas estéticas, lenguajes y posibilidades.
+          </p>
+
+
+        </section>
+
+        <section class="info-section" id="info-contact">
+          <span class="sw-mark sw-mark-tl">B/A</span>
+          <span class="sw-mark sw-mark-tr" data-es="03 — CONTACTO" data-en="03 — CONTACT">03 — CONTACTO</span>
+          <span class="sw-mark sw-mark-bl">GMT−3</span>
+          <span class="sw-mark sw-mark-br">BUENOS AIRES · AR</span>
+          <span class="sw-mark sw-mark-l" data-es="↑ VISIÓN" data-en="↑ VISION">↑ VISIÓN</span>
+          <span class="sw-mark sw-mark-r" data-es="ABIERTO 2026" data-en="OPEN 2026">ABIERTO 2026</span>
+
+          <p class="sw-lead sw-lead-contact"
+             data-es="Contacto — para nuevos proyectos, propuestas o consultas."
+             data-en="Get in touch — for new projects, proposals or inquiries.">
+            Contacto — para nuevos proyectos, propuestas o consultas.
+          </p>
+
+          <a href="mailto:baausqui@gmail.com" class="sw-pos sw-contact-email">baausqui@gmail.com</a>
+          <a href="tel:+5492323447276" class="sw-pos sw-contact-phone">+54 9 2323 447 276</a>
+          <a href="https://instagram.com/baausqui" target="_blank" class="sw-pos sw-contact-ig">@baausqui_</a>
+          <span class="sw-pos sw-contact-loc">CABA, Buenos Aires</span>
+
+          <span class="sw-pos sw-contact-edu"
+                data-es='Lic. en Diseño — Diseñador Integral [Campo Menor en Innovación Estratégica] - Univ. Torcuato Di Tella · <a href="https://instagram.com/ditelladiseno" target="_blank" rel="noopener">@ditelladiseno</a>'
+                data-en='BA in Design — Integral Designer [Minor in Strategic Innovation] - Torcuato Di Tella University · <a href="https://instagram.com/ditelladiseno" target="_blank" rel="noopener">@ditelladiseno</a>'>Lic. en Diseño — Univ. Torcuato Di Tella · <a href="https://instagram.com/ditelladiseno" target="_blank" rel="noopener">@ditelladiseno</a></span>
+
+          <span class="sw-pos sw-contact-key sw-contact-key-1">EMAIL · </span>
+          <span class="sw-pos sw-contact-key sw-contact-key-2"
+                data-es="TELÉFONO · " data-en="PHONE · ">TELÉFONO · </span>
+          <span class="sw-pos sw-contact-key sw-contact-key-3">INSTAGRAM · </span>
+          <span class="sw-pos sw-contact-key sw-contact-key-4"
+                data-es="UBICACIÓN · " data-en="LOCATION · ">UBICACIÓN · </span>
+          <span class="sw-pos sw-contact-key sw-contact-key-5"
+                data-es="EDUCACIÓN · " data-en="EDUCATION · ">EDUCACIÓN · </span>
+
+          <span class="sw-pos sw-contact-key sw-contact-key-6"
+                data-es="MENCIONES · " data-en="MENTIONS · ">MENCIONES · </span>
+
+          <ul class="sw-pos sw-contact-mentions">
+            <li>
+              <span class="mention-title">De la Silla al Infinito: Una Silla Ditelliana</span>
+              <span class="mention-meta">Museo Moderno · 2025</span>
+            </li>
+            <li>
+              <span class="mention-title">SOMA — Anticolección</span>
+              <span class="mention-meta"
+                    data-es="Diseño & Gestión Cultural, UTDT · 2025"
+                    data-en="Design & Cultural Management, UTDT · 2025">Diseño & Gestión Cultural, UTDT · 2025</span>
+            </li>
+            <li>
+              <span class="mention-title">Todo es Diseño</span>
+              <span class="mention-meta"
+                    data-es="Licenciatura en Diseño, UTDT · 2025"
+                    data-en="BA in Design, UTDT · 2025">Licenciatura en Diseño, UTDT · 2025</span>
+            </li>
+            <li>
+              <span class="mention-title">Diseño en Construcción</span>
+              <span class="mention-meta"
+                    data-es="Licenciatura en Diseño, UTDT · 2024"
+                    data-en="BA in Design, UTDT · 2024">Licenciatura en Diseño, UTDT · 2024</span>
+            </li>
+            <li>
+              <span class="mention-title">Muestra LED</span>
+              <span class="mention-meta"
+                    data-es="Licenciatura en Diseño, UTDT · 2023"
+                    data-en="BA in Design, UTDT · 2023">Licenciatura en Diseño, UTDT · 2023</span>
+            </li>
+            <li>
+              <span class="mention-title">Muestra LED</span>
+              <span class="mention-meta"
+                    data-es="Licenciatura en Diseño, UTDT · 2022"
+                    data-en="BA in Design, UTDT · 2022">Licenciatura en Diseño, UTDT · 2022</span>
+            </li>
+          </ul>
+
+          <span class="sw-pos sw-asterisk">✱</span>
+        </section>
+
+      </div>
+    </div>
+
+    <canvas id="cursor-canvas"></canvas>
+
+    <!-- I18N — small inline runtime -->
+    <script>
+      (function () {
+        const KEY = 'bausqui-lang';
+        const initial = localStorage.getItem(KEY) || 'es';
+
+        function applyLang(lang) {
+          document.documentElement.lang = lang;
+          document.querySelectorAll('[data-es][data-en]').forEach(el => {
+            const val = el.getAttribute('data-' + lang);
+            if (val == null) return;
+            // use innerHTML so we keep <u>, <br/>, etc.
+            el.innerHTML = val;
+          });
+          document.querySelectorAll('#lang-toggle button').forEach(b => {
+            b.classList.toggle('active', b.dataset.lang === lang);
+          });
+          // Notify the rest of the app (main.js can listen for this)
+          window.__lang = lang;
+          window.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
+        }
+
+        document.addEventListener('click', (e) => {
+          const btn = e.target.closest('#lang-toggle button');
+          if (!btn) return;
+          const lang = btn.dataset.lang;
+          localStorage.setItem(KEY, lang);
+          applyLang(lang);
+        });
+
+        // Apply on load
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => applyLang(initial));
+        } else {
+          applyLang(initial);
+        }
+
+        // Expose for main.js
+        window.getLang = () => window.__lang || initial;
+        window.setLang = applyLang;
+      })();
+    </script>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
