@@ -6,25 +6,25 @@
   "cleanUrls": true,
   "headers": [
     {
-      "source": "/(.*\\.(mp4|webm|mp3|wav|ogg|m4a|mov))",
+      "source": "/:file(.*\\.(?:mp4|webm|mp3|wav|ogg|m4a|mov))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*\\.(glb|gltf|hdr))",
+      "source": "/:file(.*\\.(?:glb|gltf|hdr))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*\\.(png|jpg|jpeg|webp|gif|svg|ico))",
+      "source": "/:file(.*\\.(?:png|jpg|jpeg|webp|gif|svg|ico))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*\\.(woff|woff2|ttf|otf))",
+      "source": "/:file(.*\\.(?:woff|woff2|ttf|otf))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
