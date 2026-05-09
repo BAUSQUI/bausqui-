@@ -120,7 +120,7 @@ const proyectosExtra = {
     volumen: 0.5, autores: 'Bautista Ausqui'
   },
   'TAHADIS': {
-    nombre: 'TAHADIS', video360: 'https://pub-a7045e01a924422c85679d03511d9cc3.r2.dev/TAHADIS.webm', año: '2024',
+    nombre: 'TAHADIS', video360: 'https://pub-a7045e01a924422c85679d03511d9cc3.r2.dev/TAHADIS.webm', youtubeLink: 'https://www.youtube.com/watch?v=SRQN3ccOqA0', año: '2024',
     cliente: { es: 'Personal', en: 'Personal' },
     tipo: 'VR 360',
     descripcion: {
@@ -355,6 +355,18 @@ function showVideo(nombreIcosphere, nombreCustom) {
     expandBtn.style.display = proyecto?.descripcionFull ? 'inline-block' : 'none'
   }
 
+  // Open-in-YouTube button — only visible for projects that declare a youtubeLink
+  const ytBtn = document.getElementById('open-youtube')
+  if (ytBtn) {
+    if (proyecto?.youtubeLink) {
+      ytBtn.href = proyecto.youtubeLink
+      ytBtn.classList.add('is-visible')
+    } else {
+      ytBtn.removeAttribute('href')
+      ytBtn.classList.remove('is-visible')
+    }
+  }
+
   document.getElementById('abstract-titulo').textContent = proyecto?.nombre || nombreIcosphere
   const subtituloEl = document.getElementById('abstract-subtitulo')
   if (subtituloEl) {
@@ -508,6 +520,7 @@ function hideVideo() {
     currentYouTube = null
     ytMuted = true
     document.body.classList.remove('is-video')
+    document.getElementById('open-youtube')?.classList.remove('is-visible')
     refreshSoundToggle()
     updateMusic()
     if (particles) particles.visible = true
@@ -570,8 +583,7 @@ let currentInfoTarget = null  // 'about' | 'vision' | 'contact' | null
 function shouldPlayMusic() {
   if (!musicEnabled) return false
   if (isVideoMode) return false
-  if (!isInfoMode) return true                  // Home
-  return currentInfoTarget === 'about'          // Only About inside info overlay
+  return true   // Home + every info section (About / Vision / Contact)
 }
 // Smooth volume fade so play/pause transitions don't click or stutter
 let musicFadeRaf = null

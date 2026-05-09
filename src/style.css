@@ -175,6 +175,31 @@
   opacity: 0.55;
 }
 
+/* ── OPEN IN YOUTUBE — same pill as sound-toggle ──── */
+#open-youtube {
+  display: none;            /* shown by JS only when project has a youtubeLink */
+  margin-top: 8px;
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  text-decoration: none;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  cursor: none;
+  pointer-events: auto;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+#open-youtube:hover {
+  background: #ffffff;
+  color: #050505;
+}
+#open-youtube.is-visible { display: inline-block; }
+
 /* ── TIMELINE / VIDEO SCRUBBER (under the video) ─── */
 #timeline-control {
   display: flex;
