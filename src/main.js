@@ -573,13 +573,38 @@ function shouldPlayMusic() {
   if (!isInfoMode) return true                  // Home
   return currentInfoTarget === 'about'          // Only About inside info overlay
 }
+// Smooth volume fade so play/pause transitions don't click or stutter
+let musicFadeRaf = null
+let musicTargetVol = 0.4
+function fadeMusic(targetVol, duration, done) {
+  cancelAnimationFrame(musicFadeRaf)
+  const bgMusic = document.getElementById('bg-music')
+  if (!bgMusic) return
+  const startVol = bgMusic.volume
+  const startTime = performance.now()
+  const tick = () => {
+    const t = Math.min(1, (performance.now() - startTime) / duration)
+    bgMusic.volume = startVol + (targetVol - startVol) * t
+    if (t < 1) {
+      musicFadeRaf = requestAnimationFrame(tick)
+    } else if (done) {
+      done()
+    }
+  }
+  tick()
+}
+
 function updateMusic() {
   const bgMusic = document.getElementById('bg-music')
   if (!bgMusic) return
   if (shouldPlayMusic()) {
-    bgMusic.play().catch(() => {})
+    if (bgMusic.paused) {
+      bgMusic.volume = 0
+      bgMusic.play().catch(() => {})
+    }
+    fadeMusic(musicTargetVol, 350)
   } else {
-    bgMusic.pause()
+    fadeMusic(0, 250, () => { try { bgMusic.pause() } catch (e) {} })
   }
 }
 
@@ -1117,7 +1142,30 @@ function init360Viewer(videoSrc, volume) {
   }
   window.addEventListener('resize', onResize)
 
-  video.play().catch(() => {})
+  // Retry on transient load failures (cold R2 edge, CORS preflight, etc.)
+  let retryCount = 0
+  const tryPlay = () => video.play().catch(() => {})
+  video.addEventListener('error', () => {
+    if (retryCount >= 2) return
+    retryCount++
+    const wait = 600 * retryCount
+    setTimeout(() => {
+      try {
+        video.src = videoSrc + (videoSrc.includes('?') ? '&' : '?') + 'r=' + retryCount
+        video.load()
+        tryPlay()
+      } catch (e) {}
+    }, wait)
+  })
+  // Also retry once if metadata never arrives within 4s
+  let metaTimer = setTimeout(() => {
+    if (video.readyState < 1) {
+      video.dispatchEvent(new Event('error'))
+    }
+  }, 4000)
+  video.addEventListener('loadedmetadata', () => clearTimeout(metaTimer), { once: true })
+
+  tryPlay()
   refreshSoundToggle()
 
   v360 = {
@@ -1559,6 +1607,12 @@ document.getElementById('back-top')?.addEventListener('click', (e) => {
   if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
+// ── BACK TO HOME (mobile) ───────────────────────────
+document.getElementById('back-home')?.addEventListener('click', (e) => {
+  e.stopPropagation()
+  if (isVideoMode && !isExiting) hideVideo()
+})
+
 document.getElementById('sound-toggle')?.addEventListener('click', (e) => {
   e.stopPropagation()
 
@@ -1595,6 +1649,24 @@ document.getElementById('sound-toggle')?.addEventListener('click', (e) => {
   if (!bgMusic || !musicBtn || !canvas) return
 
   bgMusic.volume = 0.4
+  musicTargetVol = 0.4
+
+  // Belt-and-suspenders looping. Some browsers ignore the native `loop`
+  // attribute when MediaElementSource is connected to a Web Audio graph.
+  bgMusic.loop = true
+  bgMusic.addEventListener('ended', () => {
+    try {
+      bgMusic.currentTime = 0
+      bgMusic.play().catch(() => {})
+    } catch (e) {}
+  })
+  // Some browsers fire `pause` near the end instead of `ended`. Re-poke it.
+  bgMusic.addEventListener('timeupdate', () => {
+    if (bgMusic.duration && bgMusic.currentTime > bgMusic.duration - 0.25) {
+      // Safe wrap a hair before the end avoids the silent gap
+      bgMusic.currentTime = 0
+    }
+  })
 
   // Mark loader progress when music has enough data
   if (bgMusic.readyState >= 3) {
@@ -1740,12 +1812,18 @@ document.getElementById('sound-toggle')?.addEventListener('click', (e) => {
         }
       })
       if (best) {
-        if (best === 'info-about') currentInfoTarget = 'about'
-        else if (best === 'info-vision') currentInfoTarget = 'vision'
-        else if (best === 'info-contact') currentInfoTarget = 'contact'
-        if (isInfoMode) updateMusic()
+        let next = currentInfoTarget
+        if (best === 'info-about') next = 'about'
+        else if (best === 'info-vision') next = 'vision'
+        else if (best === 'info-contact') next = 'contact'
+        // Only react when the active section actually changes — avoids
+        // rapid play/pause flicker as multiple thresholds trip during scroll
+        if (next !== currentInfoTarget) {
+          currentInfoTarget = next
+          if (isInfoMode) updateMusic()
+        }
       }
-    }, { threshold: [0.4, 0.6, 0.8] })
+    }, { threshold: [0.55] })
 
     sections.forEach(s => obs.observe(s))
   }
