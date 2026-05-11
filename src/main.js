@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { EffectComposer, RenderPass, BloomEffect, EffectPass, GodRaysEffect } from 'postprocessing'
 
@@ -131,8 +132,8 @@ const proyectosExtra = {
     manual: { carpeta: '/pdf/tahadis/', frames: 23 },
     volumen: 0.5, autores: 'Bautista Ausqui'
   },
-  'PRIMITIVO': {
-    nombre: 'PRIMITIVO', video: '/videos/tiempo_real.webm', año: '2024 - 2026',
+  'TIEMPO REAL': {
+    nombre: 'TIEMPO REAL', video: '/videos/tiempo_real.webm', año: '2024 - 2026',
     cliente: { es: 'Personal', en: 'Personal' },
     tipo: { es: 'Audiovisual', en: 'Audiovisual' },
     descripcion: { es: 'Diseño escenico integral entendiendo que el escenario no es un conjunto de pantallas, sino un sistema vivo. Durante los últimos años, he desarrollado y operado experiencias visuales y lumínicas donde la tecnología se pone al servicio de la narrativa del artista. A través de la generación procedimental en TouchDesigner y la operación en vivo con Resolume Arena, construyo atmósferas inmersivas que escapan del formato de video tradicional. Cada proyecto integra mapping arquitectónico y control de iluminación vía DMX para que luz, píxel y espacio funcionen como un solo cuerpo en tiempo real, adaptándose orgánicamente a cada soporte y momento del espectáculo.', en: 'Comprehensive Stage Design. Understanding the stage not as a mere collection of screens, but as a living system. Over the past few years, I have developed and operated visual and lighting experiences where technology serves the artists narrative. Through procedural generation in TouchDesigner and live operation via Resolume Arena, I build immersive atmospheres that break away from traditional video formats. Each project integrates architectural mapping and DMX lighting control, allowing light, pixel, and space to function as a single entity in real time—adapting organically to every medium and moment of the performance.' },
@@ -631,6 +632,7 @@ function launchTravel(nombre) {
 
 // Cargar flor
 const loader = new GLTFLoader()
+loader.setMeshoptDecoder(MeshoptDecoder)
 loader.load('/FLOR-1.glb', (gltf) => {
   window.__loaderDone?.('flor')
   const positions = []
@@ -643,6 +645,7 @@ loader.load('/FLOR-1.glb', (gltf) => {
   })
 
   const loaderBauti = new GLTFLoader()
+  loaderBauti.setMeshoptDecoder(MeshoptDecoder)
   loaderBauti.load('/bauti.glb', (gltfBauti) => {
     window.__loaderDone?.('bauti')
     const bautiPositions = []
