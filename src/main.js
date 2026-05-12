@@ -50,7 +50,9 @@ const proyectos = {
       es: 'La plataforma para construir la próxima generación de ciudades. Arena se compone de dos motores: A: un motor que cruza datos institucionales de la gestión de la ciudad como licitaciones, presupuestos y obras en tiempo real. B: y un motor que mide la experiencia viva de sus habitantes como los conflictos, las necesidades y los deseos de los habitantes de la ciudad. Arena contrasta ambas informaciones y ofrece insights sobre el estado real de las ciudades.',
       en: 'The platform to build the next generation of cities. Arena is composed of two engines: A: an engine that cross-references institutional data from city management — tenders, budgets and works in real time. B: an engine that measures the lived experience of its inhabitants — conflicts, needs and desires. Arena contrasts both data layers and surfaces insights about the real state of cities.'
     },
-    descripcionFull: null, visitLink: 'https://www.arena.actor/', volumen: 0.5, autores: 'Bautista Ausqui'
+    descripcionFull: null, visitLink: 'https://www.arena.actor/',
+    manual: { carpeta: '/pdf/arena/', frames: 3 },
+    volumen: 0.5, autores: 'Bautista Ausqui'
   },
   'Icosphere004': {
     nombre: 'PAPOTA', video: '/videos/papotta.webm',
