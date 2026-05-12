@@ -648,10 +648,17 @@ loader.load('/FLOR-1.glb', (gltf) => {
   window.__loaderDone?.('flor')
   const positions = []
   const SAMPLE = 20
+  // Apply each mesh's world matrix so quantized GLBs (KHR_mesh_quantization)
+  // resolve to real-world coordinates, not normalized [-1,1] space.
+  gltf.scene.updateMatrixWorld(true)
+  const _v = new THREE.Vector3()
   gltf.scene.traverse((child) => {
     if (child.isMesh) {
       const pos = child.geometry.attributes.position
-      for (let i = 0; i < pos.count; i += SAMPLE) positions.push(pos.getX(i), pos.getY(i), pos.getZ(i))
+      for (let i = 0; i < pos.count; i += SAMPLE) {
+        _v.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+        positions.push(_v.x, _v.y, _v.z)
+      }
     }
   })
 
@@ -659,10 +666,15 @@ loader.load('/FLOR-1.glb', (gltf) => {
   loaderBauti.load('/bauti.glb', (gltfBauti) => {
     window.__loaderDone?.('bauti')
     const bautiPositions = []
+    gltfBauti.scene.updateMatrixWorld(true)
+    const _vb = new THREE.Vector3()
     gltfBauti.scene.traverse((child) => {
       if (child.isMesh) {
         const pos = child.geometry.attributes.position
-        for (let i = 0; i < pos.count; i += 8) bautiPositions.push(pos.getX(i), pos.getY(i), pos.getZ(i))
+        for (let i = 0; i < pos.count; i += 8) {
+          _vb.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+          bautiPositions.push(_vb.x, _vb.y, _vb.z)
+        }
       }
     })
     const bautiGeo = new THREE.BufferGeometry()
