@@ -175,9 +175,10 @@
   opacity: 0.55;
 }
 
-/* ── OPEN IN YOUTUBE — same pill as sound-toggle ──── */
-#open-youtube {
-  display: none;            /* shown by JS only when project has a youtubeLink */
+/* ── EXTERNAL LINK PILLS (YouTube / project site) ─── */
+#open-youtube,
+#open-site {
+  display: none;            /* shown by JS only when the project provides a link */
   margin-top: 8px;
   align-self: flex-start;
   background: transparent;
@@ -194,11 +195,13 @@
   pointer-events: auto;
   transition: background 0.25s ease, color 0.25s ease;
 }
-#open-youtube:hover {
+#open-youtube:hover,
+#open-site:hover {
   background: #ffffff;
   color: #050505;
 }
-#open-youtube.is-visible { display: inline-block; }
+#open-youtube.is-visible,
+#open-site.is-visible { display: inline-block; }
 
 /* ── TIMELINE / VIDEO SCRUBBER (under the video) ─── */
 #timeline-control {

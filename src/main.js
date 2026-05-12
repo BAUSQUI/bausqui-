@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { EffectComposer, RenderPass, BloomEffect, EffectPass, GodRaysEffect } from 'postprocessing'
 
@@ -51,7 +50,7 @@ const proyectos = {
       es: 'La plataforma para construir la próxima generación de ciudades. Arena se compone de dos motores: A: un motor que cruza datos institucionales de la gestión de la ciudad como licitaciones, presupuestos y obras en tiempo real. B: y un motor que mide la experiencia viva de sus habitantes como los conflictos, las necesidades y los deseos de los habitantes de la ciudad. Arena contrasta ambas informaciones y ofrece insights sobre el estado real de las ciudades.',
       en: 'The platform to build the next generation of cities. Arena is composed of two engines: A: an engine that cross-references institutional data from city management — tenders, budgets and works in real time. B: an engine that measures the lived experience of its inhabitants — conflicts, needs and desires. Arena contrasts both data layers and surfaces insights about the real state of cities.'
     },
-    descripcionFull: null, embed: 'https://www.arena.actor/', volumen: 0.5, autores: 'Bautista Ausqui'
+    descripcionFull: null, visitLink: 'https://www.arena.actor/', volumen: 0.5, autores: 'Bautista Ausqui'
   },
   'Icosphere004': {
     nombre: 'PAPOTA', video: '/videos/papotta.webm',
@@ -368,6 +367,18 @@ function showVideo(nombreIcosphere, nombreCustom) {
     }
   }
 
+  // Visit-the-site button — only visible for projects that declare a visitLink
+  const siteBtn = document.getElementById('open-site')
+  if (siteBtn) {
+    if (proyecto?.visitLink) {
+      siteBtn.href = proyecto.visitLink
+      siteBtn.classList.add('is-visible')
+    } else {
+      siteBtn.removeAttribute('href')
+      siteBtn.classList.remove('is-visible')
+    }
+  }
+
   document.getElementById('abstract-titulo').textContent = proyecto?.nombre || nombreIcosphere
   const subtituloEl = document.getElementById('abstract-subtitulo')
   if (subtituloEl) {
@@ -522,6 +533,7 @@ function hideVideo() {
     ytMuted = true
     document.body.classList.remove('is-video')
     document.getElementById('open-youtube')?.classList.remove('is-visible')
+    document.getElementById('open-site')?.classList.remove('is-visible')
     refreshSoundToggle()
     updateMusic()
     if (particles) particles.visible = true
@@ -632,7 +644,6 @@ function launchTravel(nombre) {
 
 // Cargar flor
 const loader = new GLTFLoader()
-loader.setMeshoptDecoder(MeshoptDecoder)
 loader.load('/FLOR-1.glb', (gltf) => {
   window.__loaderDone?.('flor')
   const positions = []
@@ -645,7 +656,6 @@ loader.load('/FLOR-1.glb', (gltf) => {
   })
 
   const loaderBauti = new GLTFLoader()
-  loaderBauti.setMeshoptDecoder(MeshoptDecoder)
   loaderBauti.load('/bauti.glb', (gltfBauti) => {
     window.__loaderDone?.('bauti')
     const bautiPositions = []
