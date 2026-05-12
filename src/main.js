@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { EffectComposer, RenderPass, BloomEffect, EffectPass, GodRaysEffect } from 'postprocessing'
 
@@ -646,25 +647,49 @@ function launchTravel(nombre) {
 
 // Cargar flor
 const loader = new GLTFLoader()
+loader.setMeshoptDecoder(MeshoptDecoder)
 loader.load('/FLOR-1.glb', (gltf) => {
   window.__loaderDone?.('flor')
   const positions = []
   const SAMPLE = 20
+  // KHR_mesh_quantization stores positions in a normalized range and applies
+  // a node transform to recover real coords — apply it per vertex.
+  gltf.scene.updateMatrixWorld(true)
+  const _v = new THREE.Vector3()
+  let florMinX = Infinity, florMaxX = -Infinity
+  let florMinY = Infinity, florMaxY = -Infinity
+  let florMinZ = Infinity, florMaxZ = -Infinity
   gltf.scene.traverse((child) => {
     if (child.isMesh) {
       const pos = child.geometry.attributes.position
-      for (let i = 0; i < pos.count; i += SAMPLE) positions.push(pos.getX(i), pos.getY(i), pos.getZ(i))
+      for (let i = 0; i < pos.count; i += SAMPLE) {
+        _v.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+        positions.push(_v.x, _v.y, _v.z)
+        if (_v.x < florMinX) florMinX = _v.x
+        if (_v.x > florMaxX) florMaxX = _v.x
+        if (_v.y < florMinY) florMinY = _v.y
+        if (_v.y > florMaxY) florMaxY = _v.y
+        if (_v.z < florMinZ) florMinZ = _v.z
+        if (_v.z > florMaxZ) florMaxZ = _v.z
+      }
     }
   })
+  const florMaxDim = Math.max(florMaxX - florMinX, florMaxY - florMinY, florMaxZ - florMinZ)
 
   const loaderBauti = new GLTFLoader()
+  loaderBauti.setMeshoptDecoder(MeshoptDecoder)
   loaderBauti.load('/bauti.glb', (gltfBauti) => {
     window.__loaderDone?.('bauti')
     const bautiPositions = []
+    gltfBauti.scene.updateMatrixWorld(true)
+    const _vb = new THREE.Vector3()
     gltfBauti.scene.traverse((child) => {
       if (child.isMesh) {
         const pos = child.geometry.attributes.position
-        for (let i = 0; i < pos.count; i += 8) bautiPositions.push(pos.getX(i), pos.getY(i), pos.getZ(i))
+        for (let i = 0; i < pos.count; i += 8) {
+          _vb.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+          bautiPositions.push(_vb.x, _vb.y, _vb.z)
+        }
       }
     })
     const bautiGeo = new THREE.BufferGeometry()
@@ -681,9 +706,17 @@ loader.load('/FLOR-1.glb', (gltf) => {
     bautiGeo.computeBoundingBox()
     const bautiCenter = new THREE.Vector3()
     bautiGeo.boundingBox.getCenter(bautiCenter)
+    const bautiBoxSize = new THREE.Vector3()
+    bautiGeo.boundingBox.getSize(bautiBoxSize)
+    const bautiMaxDim = Math.max(bautiBoxSize.x, bautiBoxSize.y, bautiBoxSize.z)
+    // Size bauti relative to FLOR so visuals are robust to source-GLB scale.
+    // Tunable: BAUTI_SIZE_RATIO (~ how big bauti is vs flower), BAUTI_Y_OFFSET_RATIO (how far below center)
+    const BAUTI_SIZE_RATIO = 0.80
+    const BAUTI_Y_OFFSET_RATIO = 0.75
+    const visualScale = (florMaxDim * BAUTI_SIZE_RATIO) / Math.max(bautiMaxDim, 0.0001)
     bautiParticles.position.sub(bautiCenter)
-    bautiParticles.scale.set(2,2,2)
-    bautiParticles.position.y -= 1.3
+    bautiParticles.scale.set(visualScale, visualScale, visualScale)
+    bautiParticles.position.y -= florMaxDim * BAUTI_Y_OFFSET_RATIO
     scene.add(bautiParticles)
     bautiParticlesRef = bautiParticles
   })
