@@ -545,7 +545,7 @@ canvas {
 /* Main wordmark — center stage */
 .logo-text {
   font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-  font-size: 96px;              /* fits 480px container nicely */
+  font-size: clamp(56px, 7vw, 96px);    /* fluid, capped to fit 480px container */
   line-height: 0.85;
   letter-spacing: -0.05em;
   text-transform: uppercase;
