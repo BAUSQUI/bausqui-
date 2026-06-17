@@ -44,15 +44,17 @@ const proyectos = {
     autores: 'Bautista Ausqui'
   },
   'Icosphere005': {
-    nombre: 'ARENA', youtube: 'D3SsaiTpvl8',
-    año: '2026', ARENA: 'CO-FOUNDER',
-    tipo: { es: 'Urbanismo', en: 'Urbanism' },
+    nombre: 'PRIMITIVO',
+    video: '/videos/primitivo.webm',
+    año: '2024 - 2026 ',
+    cliente: { es: 'AUSQUI/CABA', en: 'AUSQUI/CABA' },
+    tipo: { es: 'IDENTIDAD', en: 'BRANDING' },
     descripcion: {
-      es: 'La plataforma para construir la próxima generación de ciudades. Arena se compone de dos motores: A: un motor que cruza datos institucionales de la gestión de la ciudad como licitaciones, presupuestos y obras en tiempo real. B: y un motor que mide la experiencia viva de sus habitantes como los conflictos, las necesidades y los deseos de los habitantes de la ciudad. Arena contrasta ambas informaciones y ofrece insights sobre el estado real de las ciudades.',
-      en: 'The platform to build the next generation of cities. Arena is composed of two engines: A: an engine that cross-references institutional data from city management — tenders, budgets and works in real time. B: an engine that measures the lived experience of its inhabitants — conflicts, needs and desires. Arena contrasts both data layers and surfaces insights about the real state of cities.'
+      es: 'Diseño de sistema de identidad completo: logo, tipografía, sistema de afiches, piezas digitales, tapa de disco y materiales promocionales. La tipografía, tallada como en piedra, traduce esa idea de lo primitivo, mientras los elementos gráficos sostienen la frecuencia tecnológica del proyecto. La identidad no quedó en el plano gráfico. Se diseñó también la puesta en vivo y los visuales que la acompañan, desarrollados en Blender, TouchDesigner y Resolume Arena. Cada show es una extensión coherente del lenguaje visual: el mismo concepto, ahora vibrando con la música en tiempo real.',
+      en: 'Complete identity system design: logo, custom typography, poster system, digital pieces, album cover and promotional materials. The typography, carved as if in stone, translates the primitive idea, while the graphic elements hold the technological frequency of the project. The identity did not stay on the graphic plane. The live show and accompanying visuals were also designed, developed in Blender, TouchDesigner and Resolume Arena. Each show is a coherent extension of the visual language: the same concept, now vibrating with the music in real time.'
     },
-    descripcionFull: null, visitLink: 'https://www.arena.actor/',
-    manual: { carpeta: '/pdf/arena/', frames: 3 },
+    descripcionFull: null,
+    manual: { carpeta: '/pdf/primitivo/', frames: 8 },
     volumen: 0.5, autores: 'Bautista Ausqui'
   },
   'Icosphere004': {
