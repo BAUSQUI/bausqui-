@@ -258,6 +258,7 @@
   flex: 1;
   height: 12px;
   cursor: none;
+  touch-action: none;   /* drag scrubs the timeline instead of scrolling on touch */
 }
 #timeline-line {
   position: absolute;
@@ -1000,6 +1001,7 @@ canvas {
   flex: 1;
   height: 12px;
   cursor: none;
+  touch-action: none;   /* drag adjusts volume instead of scrolling on touch */
 }
 
 #volume-line {

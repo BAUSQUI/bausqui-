@@ -213,7 +213,7 @@ const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
 renderer.setSize(window.innerWidth, window.innerHeight)
-renderer.setPixelRatio(window.devicePixelRatio)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.setClearColor(0x050505, 1)
 document.body.appendChild(renderer.domElement)
 
@@ -977,6 +977,15 @@ function showInfo(target) {
   currentInfoTarget = target
   updateMusic()
 
+  // Lazy-load the About background video on first open (kept out of the
+  // initial page load — it's decorative and heavy)
+  const bgVid = document.querySelector('.sw-bg-video')
+  if (bgVid && !bgVid.src && bgVid.dataset.src) {
+    bgVid.src = bgVid.dataset.src
+    bgVid.load()
+  }
+  bgVid?.play().catch(() => {})
+
   const overlay = document.getElementById('info-overlay')
   const scrollEl = document.getElementById('info-scroll-container')
 
@@ -1143,7 +1152,7 @@ function init360Viewer(videoSrc, volume) {
   cam.position.set(0, 0, 0.01)
 
   const rend = new THREE.WebGLRenderer({ antialias: true })
-  rend.setPixelRatio(window.devicePixelRatio)
+  rend.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   rend.setSize(container.clientWidth, container.clientHeight)
   container.appendChild(rend.domElement)
   rend.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;'
@@ -1382,9 +1391,15 @@ if (volumeControl && volumeTrack) {
     const rect = volumeTrack.getBoundingClientRect()
     setVolume((e.clientX - rect.left) / rect.width)
   }
-  volumeTrack.addEventListener('mousedown', (e) => { dragging=true; updateFromEvent(e) })
-  window.addEventListener('mousemove', (e) => { if (dragging) updateFromEvent(e) })
-  window.addEventListener('mouseup', () => { dragging=false })
+  // Pointer events cover mouse + touch + pen with one API
+  volumeTrack.addEventListener('pointerdown', (e) => {
+    dragging = true
+    volumeTrack.setPointerCapture?.(e.pointerId)
+    updateFromEvent(e)
+  })
+  window.addEventListener('pointermove', (e) => { if (dragging) updateFromEvent(e) })
+  window.addEventListener('pointerup', () => { dragging = false })
+  window.addEventListener('pointercancel', () => { dragging = false })
   setVolume(0.5)
 }
 
@@ -1645,21 +1660,24 @@ if (timelineTrack) {
     v.currentTime = ratio * v.duration
     updateTimelineUI()
   }
-  timelineTrack.addEventListener('mousedown', (e) => {
-    const v = document.getElementById('video-player')
-    if (!v) return
-    dragging = true
-    wasPlaying = !v.paused
-    v.pause()
-    seek(e)
-  })
-  window.addEventListener('mousemove', (e) => { if (dragging) seek(e) })
-  window.addEventListener('mouseup', () => {
+  const endDrag = () => {
     if (!dragging) return
     dragging = false
     const v = document.getElementById('video-player')
     if (wasPlaying) v?.play().catch(() => {})
+  }
+  timelineTrack.addEventListener('pointerdown', (e) => {
+    const v = document.getElementById('video-player')
+    if (!v) return
+    dragging = true
+    timelineTrack.setPointerCapture?.(e.pointerId)
+    wasPlaying = !v.paused
+    v.pause()
+    seek(e)
   })
+  window.addEventListener('pointermove', (e) => { if (dragging) seek(e) })
+  window.addEventListener('pointerup', endDrag)
+  window.addEventListener('pointercancel', endDrag)
 }
 
 // ── BACK TO TOP ─────────────────────────────────────
@@ -1736,19 +1754,6 @@ document.getElementById('sound-toggle')?.addEventListener('click', (e) => {
   } else {
     bgMusic.addEventListener('canplaythrough', () => window.__loaderDone?.('music'), { once: true })
     bgMusic.addEventListener('loadeddata',     () => window.__loaderDone?.('music'), { once: true })
-  }
-
-  // Mark loader progress for the About background video
-  const bgVid = document.querySelector('.sw-bg-video')
-  if (bgVid) {
-    if (bgVid.readyState >= 2) {
-      window.__loaderDone?.('bgvideo')
-    } else {
-      bgVid.addEventListener('loadeddata', () => window.__loaderDone?.('bgvideo'), { once: true })
-      bgVid.addEventListener('canplay',    () => window.__loaderDone?.('bgvideo'), { once: true })
-    }
-  } else {
-    window.__loaderDone?.('bgvideo')
   }
 
   // Crisp canvas on retina

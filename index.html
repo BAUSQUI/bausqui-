@@ -51,7 +51,6 @@
       <li data-key="fonts"   data-es="TIPOGRAFÍA"  data-en="TYPEFACE">TIPOGRAFÍA</li>
       <li data-key="flor"    data-es="3D · FLOR"  data-en="3D · FLOR">3D · FLOR</li>
       <li data-key="bauti"   data-es="3D · BAUTI" data-en="3D · BAUTI">3D · BAUTI</li>
-      <li data-key="bgvideo" data-es="VIDEO"      data-en="VIDEO">VIDEO</li>
       <li data-key="music"   data-es="AUDIO"      data-en="AUDIO">AUDIO</li>
     </ul>
   </div>
@@ -61,7 +60,7 @@
 <script>
   // Loader: particle animation + asset progress tracking
   (function () {
-    const KEYS = ['fonts', 'flor', 'bauti', 'music', 'bgvideo'];
+    const KEYS = ['fonts', 'flor', 'bauti', 'music'];
     const done = Object.create(null);
     KEYS.forEach(k => (done[k] = false));
     let displayed = 0; // smoothed % shown to user
@@ -75,7 +74,7 @@
     const ctx = canvas.getContext('2d');
 
     function fit() {
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -452,9 +451,7 @@
       <div id="info-scroll-container">
 
         <section class="info-section" id="info-about">
-          <video class="sw-bg-video" autoplay muted loop playsinline>
-            <source src="/AUSQUI_GRIS_1.webm" type="video/webm">
-          </video>
+          <video class="sw-bg-video" muted loop playsinline preload="none" data-src="/AUSQUI_GRIS_1.webm"></video>
           <span class="sw-mark sw-mark-tl">B/A</span>
           <span class="sw-mark sw-mark-bl">EST. 2003</span>
           <span class="sw-mark sw-mark-br">BUENOS AIRES · AR</span>
