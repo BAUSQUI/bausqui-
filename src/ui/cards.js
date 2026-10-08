@@ -12,6 +12,7 @@ export function initCards(onSelect) {
     // HOVER → load + play preview (or show static poster if no video)
     card.addEventListener('mouseenter', () => {
       if (state.isVideoMode || state.isInfoMode) return
+      if (card.dataset.layout === 'row') return
       const poster = card.dataset.poster
       if (previewVideo && poster && !previewVideo.poster) {
         previewVideo.poster = poster

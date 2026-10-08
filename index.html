@@ -33,145 +33,98 @@
   </head>
   <body>
 
-<!-- LOADER -->
-<div id="loader">
-  <canvas id="loader-canvas"></canvas>
-
+<!-- LOADER: text over #050505 until the scene's core is ready, then transparent: on the
+     tornado home the loader IS the tornado assembling behind this text (CLAUDE.md "Loader") -->
+<div id="loader" class="is-opaque">
   <span class="loader-mark loader-mark-tl">B/A — BAUSQUI ©</span>
   <span class="loader-mark loader-mark-tr" data-es="INICIALIZANDO" data-en="INITIALIZING">INICIALIZANDO</span>
   <span class="loader-mark loader-mark-bl">EST. 2003</span>
   <span class="loader-mark loader-mark-br">BUENOS AIRES · AR</span>
 
   <div class="loader-center">
-    <span class="loader-eyebrow" data-es="✱ CARGANDO ESCENA" data-en="✱ LOADING SCENE">✱ CARGANDO ESCENA</span>
-    <div class="loader-numbers">
-      <span id="loader-pct">00</span><span class="loader-pct-sym">%</span>
-    </div>
-    <ul class="loader-checklist">
-      <li data-key="fonts"   data-es="TIPOGRAFÍA"  data-en="TYPEFACE">TIPOGRAFÍA</li>
-      <li data-key="flor"    data-es="3D · FLOR"  data-en="3D · FLOR">3D · FLOR</li>
-      <li data-key="bauti"   data-es="3D · BAUTI" data-en="3D · BAUTI">3D · BAUTI</li>
-      <li data-key="music"   data-es="AUDIO"      data-en="AUDIO">AUDIO</li>
-    </ul>
+    <span class="loader-title">BAUSQUI — PORTFOLIO</span>
+    <span class="loader-pct" id="loader-pct">0%</span>
   </div>
-
-  <div class="loader-bar-bottom"><span id="loader-bar-fill"></span></div>
 </div>
 <script>
-  // Loader: particle animation + asset progress tracking
+  // Loader: REAL progress over registered assets (never faked).
+  //   __loader.add(id, weight)  register an asset when it starts loading (8s timeout: warned + skipped)
+  //   __loader.done(id)         it loaded (or failed: also done, so nothing ever sticks)
+  //   __loader.seal()           every asset is registered: completion is now possible
+  //   __loader.coreReady()      the scene's core rendered: the loader turns transparent
+  //   __loader.onEnter(fn)      fn() at 100%: the user is in, automatically (no gate)
+  // Legacy: __loaderDone(key), __loaderUseKeys(keys) (the flower experience).
   (function () {
-    const KEYS = ['fonts', 'flor', 'bauti', 'music'];
-    const done = Object.create(null);
-    KEYS.forEach(k => (done[k] = false));
-    let displayed = 0; // smoothed % shown to user
-    let target = 0;    // actual loaded ratio
-    let hidden = false;
-
+    const TIMEOUT = 8000;
+    const HOLD = 700;   // ms the counter rests at 100% before everything fades into the home
+    const assets = Object.create(null);   // id → { weight, done }
+    let sealed = false, complete = false, entered = false, displayed = 0;
+    const enterFns = [];
     const loaderEl = document.getElementById('loader');
     const pctEl = document.getElementById('loader-pct');
-    const fillEl = document.getElementById('loader-bar-fill');
-    const canvas = document.getElementById('loader-canvas');
-    const ctx = canvas.getContext('2d');
+    document.body.classList.add('is-loading');
 
-    function fit() {
-      const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    function progress() {
+      let total = 0, got = 0;
+      for (const id in assets) { total += assets[id].weight; if (assets[id].done) got += assets[id].weight; }
+      return total > 0 ? got / total : 0;
     }
-    fit();
-    window.addEventListener('resize', fit);
-
-    // Particles drift in 2D space, blue-white tones
-    const N = 110;
-    const ps = [];
-    for (let i = 0; i < N; i++) {
-      ps.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        r: 1 + Math.random() * 2.2,
-        a: 0.25 + Math.random() * 0.6,
-        phase: Math.random() * Math.PI * 2
-      });
+    function check() {
+      if (complete || !sealed) return;
+      for (const id in assets) if (!assets[id].done) return;
+      complete = true;
+      loaderEl.classList.remove('is-opaque');   // reduced motion kept it opaque until now
+      loaderEl.classList.add('is-complete');
+      setTimeout(enter, HOLD);
     }
-
+    // In, automatically: the text fades out, the home UI fades in around the scene
+    function enter() {
+      if (entered || !complete) return;
+      entered = true;
+      loaderEl.classList.add('is-entered');
+      document.body.classList.remove('is-loading');
+      enterFns.forEach(fn => { try { fn() } catch (e) { console.error(e) } });
+      setTimeout(() => loaderEl.remove(), 1400);
+    }
     function frame() {
+      if (!document.body.contains(loaderEl)) return;
       requestAnimationFrame(frame);
-      const W = window.innerWidth, H = window.innerHeight;
-      ctx.clearRect(0, 0, W, H);
-      const t = performance.now() / 1000;
-      const cx = W / 2, cy = H / 2;
-
-      // Smooth percent toward target
-      displayed += (target - displayed) * 0.08;
-      const pctNum = Math.min(100, Math.round(displayed * 100));
-      if (pctEl) pctEl.textContent = pctNum < 10 ? '0' + pctNum : String(pctNum);
-      if (fillEl) fillEl.style.width = pctNum + '%';
-
-      for (const p of ps) {
-        // Gentle drift + slight pull toward center as progress grows
-        const pull = displayed * 0.5;
-        p.vx += (cx - p.x) * 0.00002 * pull;
-        p.vy += (cy - p.y) * 0.00002 * pull;
-        p.x += p.vx + Math.sin(t + p.phase) * 0.15;
-        p.y += p.vy + Math.cos(t + p.phase) * 0.15;
-        if (p.x < -10) p.x = W + 10;
-        if (p.x > W + 10) p.x = -10;
-        if (p.y < -10) p.y = H + 10;
-        if (p.y > H + 10) p.y = -10;
-
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
-        g.addColorStop(0, 'rgba(120, 170, 255,' + p.a + ')');
-        g.addColorStop(1, 'rgba(120, 170, 255, 0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      const p = progress();
+      displayed += (p - displayed) * 0.12;
+      if (complete) displayed = 1;
+      pctEl.textContent = Math.round(displayed * 100) + '%';
     }
     frame();
 
-    function recompute() {
-      let count = 0;
-      KEYS.forEach(k => { if (done[k]) count++; });
-      target = count / KEYS.length;
-      if (count >= KEYS.length) hide();
-    }
-
-    function hide() {
-      if (hidden) return;
-      hidden = true;
-      // Wait for the bar to visually catch up before fading
-      setTimeout(() => {
-        loaderEl.classList.add('is-hidden');
-        setTimeout(() => loaderEl && loaderEl.parentNode && loaderEl.parentNode.removeChild(loaderEl), 1000);
-      }, 500);
-    }
-
-    // Public API for main.js
-    window.__loaderDone = function (key) {
-      if (!(key in done) || done[key]) return;
-      done[key] = true;
-      const li = document.querySelector('.loader-checklist li[data-key="' + key + '"]');
-      if (li) li.classList.add('is-done');
-      recompute();
+    window.__loader = {
+      add(id, weight = 1) {
+        if (assets[id]) return;
+        assets[id] = { weight, done: false };
+        setTimeout(() => {
+          if (assets[id] && !assets[id].done) {
+            console.warn('[loader] "' + id + '" took longer than ' + TIMEOUT / 1000 + 's: skipped');
+            this.done(id);
+          }
+        }, TIMEOUT);
+      },
+      done(id) { if (assets[id] && !assets[id].done) { assets[id].done = true; check(); } },
+      seal() { sealed = true; check(); },
+      coreReady(reveal = true) { if (reveal) loaderEl.classList.remove('is-opaque'); },
+      onEnter(fn) { if (entered) fn(); else enterFns.push(fn); },
+      get progress() { return progress(); },
+      get displayed() { return displayed; },
+      get complete() { return complete; },
+      get entered() { return entered; },
     };
 
-    // Safety: never block the user forever — force-hide after 10s
-    setTimeout(() => {
-      KEYS.forEach(k => (done[k] = true));
-      target = 1;
-      hide();
-    }, 10000);
+    // Legacy API (flower): keys are registered up front, the experience marks them done
+    window.__loaderDone = (key) => window.__loader.done(key);
+    window.__loaderUseKeys = (keys) => { Object.keys(keys || {}).forEach(k => window.__loader.add(k)); };
 
     // Fonts
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => window.__loaderDone('fonts'));
-    } else {
-      window.__loaderDone('fonts');
-    }
+    window.__loader.add('fonts');
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => window.__loader.done('fonts'));
+    else window.__loader.done('fonts');
   })();
 </script>
 

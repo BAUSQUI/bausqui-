@@ -1,7 +1,14 @@
 // ── BACKGROUND MUSIC + WAVEFORM VISUALIZER ─────────────
 import { state } from '../state.js'
+import { audioBlocked } from './mediaGuard.js'
+
+// On the tornado home a Web Audio stems engine (experiences/tornado/tornadoAudio.js) sets
+// window.__musicOverride: the toggle then just flips state.musicEnabled (the engine follows
+// it) and the waveform reads the engine's analyser; <audio id="bg-music"> stays silent.
+const override = () => window.__musicOverride
 
 function shouldPlayMusic() {
+  if (audioBlocked) return false
   if (!state.musicEnabled) return false
   if (state.isVideoMode) return false
   return true   // Home + every info section (About / Vision / Contact)
@@ -28,6 +35,7 @@ function fadeMusic(targetVol, duration, done) {
 }
 
 export function updateMusic() {
+  if (override()) return
   const bgMusic = document.getElementById('bg-music')
   if (!bgMusic) return
   if (shouldPlayMusic()) {
@@ -67,8 +75,11 @@ export function initMusic() {
     }
   })
 
-  // Mark loader progress when music has enough data
-  if (bgMusic.readyState >= 3) {
+  // Mark loader progress when music has enough data (the stems engine reports its own)
+  if (override() || audioBlocked) {
+    bgMusic.preload = 'none'
+    if (audioBlocked && !override()) window.__loaderDone?.('music')
+  } else if (bgMusic.readyState >= 3) {
     window.__loaderDone?.('music')
   } else {
     bgMusic.addEventListener('canplaythrough', () => window.__loaderDone?.('music'), { once: true })
@@ -114,11 +125,14 @@ export function initMusic() {
     requestAnimationFrame(drawViz)
     ctx.clearRect(0, 0, CSS_W, CSS_H)
 
-    const playing = state.musicEnabled && !bgMusic.paused
+    const o = override()
+    const an = o ? o.analyser : analyser
+    if (o && an && (!dataArray || dataArray.length !== an.frequencyBinCount)) dataArray = new Uint8Array(an.frequencyBinCount)
+    const playing = state.musicEnabled && (o ? o.playing : !bgMusic.paused)
     const targets = new Array(BARS).fill(0)
 
-    if (playing && analyser) {
-      analyser.getByteFrequencyData(dataArray)
+    if (playing && an) {
+      an.getByteFrequencyData(dataArray)
       // Pull lower-mid bins (audible musical range), skipping the very bottom
       const start = 1
       for (let i = 0; i < BARS; i++) {
@@ -126,10 +140,16 @@ export function initMusic() {
         targets[i] = (dataArray[idx] / 255)
       }
     } else if (state.musicEnabled) {
-      // Idle wiggle while loading / waiting
-      const t = performance.now() / 600
-      for (let i = 0; i < BARS; i++) {
-        targets[i] = 0.08 + 0.06 * Math.sin(t + i * 0.5)
+      if (o && o.waiting) {
+        // Waiting for a gesture to start the sound: a slow, soft pulse
+        const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 700)
+        for (let i = 0; i < BARS; i++) targets[i] = 0.06 + 0.16 * pulse * (0.7 + 0.3 * Math.sin(i * 0.9))
+      } else {
+        // Idle wiggle while loading / waiting
+        const t = performance.now() / 600
+        for (let i = 0; i < BARS; i++) {
+          targets[i] = 0.08 + 0.06 * Math.sin(t + i * 0.5)
+        }
       }
     }
     // else: bars decay to 0
@@ -154,6 +174,10 @@ export function initMusic() {
   musicBtn.classList.add('is-on')
 
   const tryStart = () => {
+    if (override() || audioBlocked) return
+    // Nothing plays before the loader finishes (the user is then in, automatically)
+    if (window.__loader && !window.__loader.entered) return
+    if (!state.musicEnabled) return
     ensureAudioGraph()
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
     bgMusic.play().catch(() => {})
@@ -174,8 +198,10 @@ export function initMusic() {
   window.addEventListener('touchstart', onFirstGesture, true)
 
   musicBtn.addEventListener('click', () => {
-    ensureAudioGraph()
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
+    if (!override() && !audioBlocked) {
+      ensureAudioGraph()
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
+    }
 
     state.musicEnabled = !state.musicEnabled
     musicBtn.classList.toggle('is-on', state.musicEnabled)

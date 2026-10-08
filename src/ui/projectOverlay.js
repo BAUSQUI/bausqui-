@@ -7,7 +7,6 @@ import { getProject } from '../data/projects.js'
 import { playback, refreshSoundToggle, ytPostMessage, setVolume, updateTimelineUI } from './playback.js'
 import { init360Viewer, destroy360Viewer, refresh360Hint } from './viewer360.js'
 import { updateMusic } from './music.js'
-import { spawnTunnelExitParticles } from './cursor.js'
 
 let hooks = { onOverlay() {} }
 let currentProjectId = null
@@ -186,7 +185,6 @@ export function hideVideo() {
 
   overlay.style.transition = 'opacity 0.6s ease'
   overlay.style.opacity = '0'
-  spawnTunnelExitParticles()
 
   setTimeout(() => {
     overlay.classList.remove('visible')

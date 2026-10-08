@@ -4,149 +4,83 @@
   box-sizing: border-box;
 }
 
-/* ── LOADER ────────────────────────────────────────── */
+/* ── LOADER ─────────────────────────────────────────
+   Text only, no buttons. Opaque #050505 until the scene's core renders (never a blank
+   screen), then transparent: on the tornado home the tornado assembles behind this text.
+   At 100% the text fades out and the user is in, automatically. White / gray, the logo
+   block's small uppercase vocabulary. No canvas, no blue, no giant number. */
 #loader {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #050505;
   color: #ffffff;
-  overflow: hidden;
-  transition: opacity 0.8s ease;
-  pointer-events: auto;
-}
-#loader.is-hidden {
-  opacity: 0;
+  background: transparent;
   pointer-events: none;
+  transition: background-color 0.8s ease;
 }
-
-#loader-canvas {
-  position: absolute !important;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  z-index: 1;
-}
+#loader.is-opaque { background: #050505; }
+#loader .loader-mark,
+#loader .loader-center { transition: opacity 0.9s ease; }
+#loader.is-entered .loader-mark,
+#loader.is-entered .loader-center { opacity: 0; }
 
 /* Corner marks — same vocabulary as the About section */
 .loader-mark {
   position: absolute;
-  z-index: 3;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.55);
 }
 .loader-mark-tl { top: 32px; left: 32px; }
 .loader-mark-tr { top: 32px; right: 32px; }
 .loader-mark-bl { bottom: 60px; left: 32px; }
 .loader-mark-br { bottom: 60px; right: 32px; }
 
-/* Center stack: eyebrow, huge percent, checklist */
+/* Centered under the tornado */
 .loader-center {
   position: absolute;
-  inset: 0;
-  z-index: 3;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
-  text-align: center;
-}
-
-.loader-eyebrow {
+  gap: 10px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.loader-title { font-size: 10px; font-weight: 500; letter-spacing: 0.25em; color: #ffffff; }
+.loader-pct {
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
+  letter-spacing: 0.2em;
   color: rgba(255, 255, 255, 0.55);
-}
-
-.loader-numbers {
-  display: flex;
-  align-items: flex-start;
-  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-  font-weight: 900;
-  font-size: clamp(50px, 11vw, 180px);
-  line-height: 0.8;
-  letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
-  color: #ffffff;
 }
-#loader-pct { min-width: 2.4ch; text-align: right; }
-.loader-pct-sym {
-  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-  font-weight: 900;
-  font-size: 1em;
-  margin-left: 0.04em;
-  color: #ffffff;
-  letter-spacing: -0.06em;
+/* While loading, the home UI stays hidden; it fades in around the tornado on enter */
+body.is-loading { overflow: hidden !important; }
+.logo-container, .nav-grid, .tornado-scroll-hint, .music-toggle, .lang-toggle, .proyectos-grid {
+  transition: opacity 1.2s ease;
 }
-
-/* Checklist — items strike through as they finish */
-.loader-checklist {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 14px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.loader-checklist li {
-  position: relative;
-  color: rgba(255, 255, 255, 0.4);
-  transition: color 0.4s ease;
-  padding-left: 14px;
-}
-.loader-checklist li::before {
-  content: '○';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 9px;
-  opacity: 0.5;
-  transition: content 0.2s ease, opacity 0.4s ease;
-}
-.loader-checklist li.is-done {
-  color: rgba(255, 255, 255, 0.95);
-}
-.loader-checklist li.is-done::before {
-  content: '●';
-  opacity: 1;
-}
-
-/* Hairline progress bar — full width along the bottom */
-.loader-bar-bottom {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
-  z-index: 3;
-}
-#loader-bar-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
-  background: #ffffff;
-  transition: width 0.4s ease;
-}
+body.is-loading .logo-container,
+body.is-loading .nav-grid,
+body.is-loading .tornado-scroll-hint,
+body.is-loading .music-toggle,
+body.is-loading .lang-toggle,
+body.is-loading .proyectos-grid { opacity: 0 !important; pointer-events: none !important; }
 
 @media (max-width: 700px) {
-  .loader-mark-bl, .loader-mark-br { bottom: 40px; }
-  .loader-checklist { gap: 14px; font-size: 9px; }
+  .loader-mark { font-size: 9px; letter-spacing: 0.18em; }
+  .loader-mark-tl, .loader-mark-tr { top: 18px; }
+  .loader-mark-tl { left: 18px; }
+  .loader-mark-tr { right: 18px; }
+  .loader-mark-bl { bottom: 40px; left: 18px; }
+  .loader-mark-br { bottom: 40px; right: 18px; }
+  .loader-center { bottom: 84px; }
 }
 
 /* ── SOUND TOGGLE (under project meta) ─────────────── */
@@ -474,8 +408,8 @@ canvas {
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
   width: 480px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0);
+  border: none
 }
 
 .nav-card {
@@ -2326,14 +2260,6 @@ a.ed-contact-val:hover { color: #4488ff; }
   #esc-hint        { display: none; }   /* no ESC key on mobile keyboards */
 
   /* Loader */
-  .loader-mark { font-size: 9px; letter-spacing: 0.18em; }
-  .loader-mark-tl, .loader-mark-tr { top: 18px; }
-  .loader-mark-tl { left: 18px; }
-  .loader-mark-tr { right: 18px; }
-  .loader-mark-bl { bottom: 40px; left: 18px; }
-  .loader-mark-br { bottom: 40px; right: 18px; }
-  .loader-numbers { font-size: clamp(60px, 22vw, 130px); }
-  .loader-checklist { font-size: 8px; gap: 12px; }
 
   /* Video overlay — single-column, video → abstract → timeline → manual */
   #video-overlay { padding: 0; }
@@ -2417,10 +2343,6 @@ a.ed-contact-val:hover { color: #4488ff; }
   .lang-toggle { font-size: 9px; gap: 6px; }
 
   /* Loader */
-  .loader-eyebrow { letter-spacing: 0.3em; font-size: 9px; }
-  .loader-numbers { font-size: clamp(52px, 24vw, 100px); }
-  .loader-checklist { gap: 8px; font-size: 7.5px; letter-spacing: 0.12em; }
-  .loader-bar { width: 160px; }
 
   /* Video overlay tighter */
   #section-video { padding: 50px 12px 32px; gap: 20px; }

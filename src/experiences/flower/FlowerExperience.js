@@ -382,14 +382,19 @@ function loadModels() {
 }
 
 export class FlowerExperience extends Experience {
+  static loaderKeys = {
+    flor:  { es: '3D · FLOR',  en: '3D · FLOR' },
+    bauti: { es: '3D · BAUTI', en: '3D · BAUTI' },
+  }
+
   init(context) {
     ctx = context
     renderer = ctx.renderer
     setupScene()
     loadModels()
 
-    // G: save the current camera as the hovered project's view (authoring helper)
-    window.addEventListener('keydown', (e) => {
+    // G: save the current camera as the hovered project's view (authoring helper, dev only)
+    if (import.meta.env.DEV) window.addEventListener('keydown', (e) => {
       if ((e.key === 'g' || e.key === 'G') && hoveredNombre) {
         savedViews[hoveredNombre] = { position: camera.position.clone(), target: controls.target.clone() }
         console.log(`✅ Vista guardada para ${hoveredNombre}:`, savedViews[hoveredNombre])

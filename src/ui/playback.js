@@ -2,6 +2,7 @@
 // timeline scrubber + play/pause. Shared by the native player, the 360° viewer
 // and YouTube embeds.
 import { tr, I18N } from '../i18n.js'
+import { audioBlocked } from './mediaGuard.js'
 
 // Track currently audible video element so the sound-toggle controls the right one
 export const playback = {
@@ -166,6 +167,7 @@ export function initTimeline() {
 export function initSoundToggle() {
   document.getElementById('sound-toggle')?.addEventListener('click', (e) => {
     e.stopPropagation()
+    if (audioBlocked) return   // media guard: videos stay muted
 
     // YouTube path — control via postMessage
     if (playback.currentYouTube) {

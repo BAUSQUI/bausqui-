@@ -5,6 +5,10 @@
 //   openProject(id),     open the project overlay for a project id (data/projects.js)
 // }
 export class Experience {
+  // Loading-screen checklist entries for this experience's own assets: { key: { es, en } }.
+  // The experience calls window.__loaderDone(key) when each one is ready.
+  static loaderKeys = {}
+
   init(ctx) {}
 
   // Called once per animation frame; the experience renders itself.
