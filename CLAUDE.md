@@ -468,8 +468,7 @@ cascade memory layout, and your 2D atlas/per-cascade target plan. No code yet.
 - **6. Polish — partial:** `?exp=` switch and reduced motion done; touch = tap to light, tap
   again to open. Still open: RC quality tiers, the spotlight fallback when float targets are
   unsupported (today: unlit tornado + a warning).
-- **Not yet live:** `src/config.js` still defaults to `'flower'`; bausqui.com shows the
-  tornado only after switching it to `'tornado'`.
+- **Live home:** `src/config.js` defaults to `'tornado'` (`?exp=flower` still shows the flower).
 - Pre-commit checks passed (build, `vite preview` with no console errors on home / About /
   works list / project; lil-gui, buffer selector, `?debug=ink`, `?exp=rc-test` are dev-only
   and absent from `dist/`). See `HANDOFF.md` for the current state and next steps.

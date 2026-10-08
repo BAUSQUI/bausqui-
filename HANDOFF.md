@@ -12,8 +12,8 @@ npm run build        # → dist/
 npm run preview      # serves dist/
 ```
 
-- `?exp=tornado` / `?exp=flower` picks the home. **`src/config.js` still defaults to
-  `'flower'`**: switch `EXPERIENCE` to `'tornado'` to make it the live home on bausqui.com.
+- `?exp=tornado` / `?exp=flower` picks the home. `src/config.js` defaults to `'tornado'`
+  (the live home on bausqui.com).
 - `?mute=1` (or `navigator.webdriver`): the media guard; sound never starts. Use it for tests.
 - Dev only (stripped from production builds): lil-gui panel, RC buffer selector,
   `?debug=ink` (ink style test page), `?exp=rc-test` (RC standalone).
@@ -43,7 +43,6 @@ The flower experience is untouched and still selectable.
   unsupported (today the tornado renders unlit with a console warning).
 - Bundle is one ~845 kB JS chunk (Vite warns above 500 kB). Fine for now; code-splitting the
   flower vs. tornado experiences would cut it.
-- Switch `src/config.js` to `'tornado'` when it's time to go live.
 
 ## Assets / deploy
 

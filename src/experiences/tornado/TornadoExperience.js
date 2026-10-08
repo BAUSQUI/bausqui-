@@ -432,6 +432,10 @@ export class TornadoExperience extends Experience {
 
   // The canvas covers the whole viewport (fixed); the list scrolls over it
   resize(w, h) {
+    // A window that opens hidden can report 0×0: a 0/0 aspect would put NaN in the camera
+    // and in everything placed from it (strokes, particles) on the first frame
+    w = Math.max(1, w)
+    h = Math.max(1, h)
     this.renderer.setSize(w, h)
     this.camera.aspect = w / h
     this.camera.updateProjectionMatrix()
