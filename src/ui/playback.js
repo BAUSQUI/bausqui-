@@ -97,12 +97,16 @@ export function updateTimelineUI() {
   if (timelineDuration) timelineDuration.textContent = formatTime(dur)
 }
 
+// Inline SVG, not ▶ / ❚❚: iOS can render those unicode symbols as emoji
+const PLAY_ICON = '<svg class="icon icon-play" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 1.5v7l6-3.5z"/></svg>'
+const PAUSE_ICON = '<svg class="icon icon-pause" viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1.5v7M7 1.5v7"/></svg>'
+
 function refreshPlayBtn() {
   const v = document.getElementById('video-player')
   const btn = document.getElementById('timeline-play')
   if (!v || !btn) return
   const playing = !v.paused && !v.ended
-  btn.textContent = playing ? '❚❚' : '▶'
+  btn.innerHTML = playing ? PAUSE_ICON : PLAY_ICON
   btn.classList.toggle('is-playing', playing)
 }
 

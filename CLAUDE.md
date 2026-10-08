@@ -310,6 +310,13 @@ the work, see "Tornado home" below).
   always there but transparent at rest (`homeLayout.css`); the title keeps its slide and uses a
   difference blend so it stays legible over ink.
 - No cursor-canvas particle bursts anywhere (the old radial exit burst was removed).
+- **Icons are inline SVG, never unicode symbols** (`.icon` in `style.css`: `currentColor`
+  stroke, ~10px): iOS renders emoji-capable characters such as ↗ and ▶ as color emoji.
+  Translated text sits in its own `data-es`/`data-en` span next to the SVG, so the language
+  toggle (which rewrites innerHTML) never removes the icon. Plain ←↑→↓, ● and © are safe text.
+- Mobile works list: bottom padding clears the fixed sound / language toggles (+ safe area);
+  once the list reaches the fixed logo + nav, a solid #050505 bar fades in behind them
+  (`body::before`, height = the header's bottom, toggled by `is-list-under-header`).
 - **Sound** (`tornadoAudio.js`, Web Audio API, never `<audio>` elements):
   - Three stems, each with its own gain into the master (→ analyser → destination):
     `/music-port.mp3` (the MAIN ambient bed, always playing), `/music-tornado.mp3` (tornado

@@ -313,7 +313,7 @@ function loadEmbed(url, nombre) {
     const headline = lang === 'en'
       ? "This site can't be embedded here."
       : 'Este sitio no permite ser incrustado.'
-    const action = lang === 'en' ? 'OPEN SITE ↗' : 'ABRIR SITIO ↗'
+    const action = (lang === 'en' ? 'OPEN SITE' : 'ABRIR SITIO') + ' <svg class="icon icon-arrow" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 8L8 2M3.5 2H8v4.5"/></svg>'
     fallback.innerHTML = `
       <div class="embed-fallback-inner">
         <span class="embed-fallback-domain">${url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>

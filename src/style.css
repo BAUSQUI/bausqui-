@@ -187,6 +187,22 @@ body.is-loading .proyectos-grid { opacity: 0 !important; pointer-events: none !i
 }
 #timeline-play:hover { opacity: 0.7; }
 #timeline-play.is-playing { font-size: 10px; letter-spacing: -1px; }
+
+/* ── Inline SVG icons (never unicode arrows / symbols: iOS can turn them into emoji) ── */
+.icon {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  vertical-align: -0.05em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.1;
+  stroke-linecap: square;
+  overflow: visible;
+}
+.icon-play { fill: currentColor; stroke: none; }
+.icon-asterisk { width: 1em; height: 1em; stroke-width: 1; vertical-align: middle; }
 #timeline-track {
   position: relative;
   flex: 1;

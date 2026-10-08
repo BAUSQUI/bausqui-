@@ -200,7 +200,27 @@ body.tornado-home.is-video .tornado-link { visibility: hidden; }
   body.tornado-home:not(.info-active) .nav-card { min-height: 46px; padding: 7px; }
   body.tornado-home:not(.info-active) .nav-card .card-title { font-size: 11px; margin-top: 5px; }
   .tornado-scroll-hint { bottom: 72px; }
-  body.tornado-home .proyectos-grid { padding-top: 190px; padding-bottom: 90px; grid-auto-rows: minmax(48px, auto); }
+  /* Bottom padding: the last row clears the fixed sound / language toggles (+ iOS home bar) */
+  body.tornado-home .proyectos-grid { padding-top: 190px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); grid-auto-rows: minmax(48px, auto); }
+  /* Once the list reaches the fixed logo + nav, they sit on a solid bar so rows never
+     scroll underneath them (height = the header's bottom, set by homeLayout.js) */
+  body.tornado-home::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--home-header-h, 176px);
+    z-index: 59;
+    background: #050505;
+    border-bottom: 1px solid #292929;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  body.tornado-home.is-list-under-header::before { opacity: 1; }
+  body.tornado-home.is-video::before,
+  body.tornado-home.info-active::before { opacity: 0; }
   body.tornado-home .proyectos-grid .proyecto-card { grid-template-columns: minmax(0, 1fr) 60px 94px; gap: 3px 8px; padding: 7px 5px; min-height: 48px; }
   body.tornado-home .proyecto-card .card-title { font-size: 13px; }
   body.tornado-home .proyecto-card .card-tag { grid-column: 1; grid-row: 2; font-size: 8px; }
