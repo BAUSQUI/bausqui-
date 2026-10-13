@@ -38,6 +38,7 @@ const vertexShader = /* glsl */`
   varying vec2 vUv;                 // s, t (t in units of the max half width; |t| > 1 = AA margin)
   varying float vHalfPx, vLenPx;
   varying vec4 vA, vB;
+  uniform float uPxScale;           // target px per CSS px (sharp layers render at the device ratio)
   void main() {
     vec4 c = projectionMatrix * modelViewMatrix * vec4(aCenter, 1.0);
     vec4 e = projectionMatrix * modelViewMatrix * vec4(aCenter + aTangent * 0.01, 1.0);
@@ -48,7 +49,7 @@ const vertexShader = /* glsl */`
     float pxPerUnit = projectionMatrix[1][1] * uViewport.y * 0.5 / c.w;
     // Near strokes wider, far strokes thinner; a clear gust thins the near side
     float wScale = mix(1.15, 0.55, aDepth * uDepthContrast) * mix(mix(0.55, 1.0, uVeil), 1.0, aDepth);
-    float halfPx = aWK < 0.02 ? 1e-4 : max(aA.y * pxPerUnit * wScale * aWK, 0.6);   // threads stay ≥ ~1px
+    float halfPx = aWK < 0.02 ? 1e-4 : max(aA.y * pxPerUnit * wScale * aWK, 0.6 * uPxScale);   // threads stay ≥ ~1 CSS px
     float margin = aWK < 0.02 ? 0.0 : 1.5;       // px for the antialiased edge
     c.xy += nrm * aSide * (halfPx + margin) / uViewport * 2.0 * c.w;
     gl_Position = c;
@@ -70,6 +71,8 @@ const fragmentShader = /* glsl */`
   varying float vDepth;
   uniform vec2 uBoil;               // new value at each redraw of the drawing (boil)
   uniform float uRough, uDryBrush, uHalftoneCell;
+  uniform float uPxScale;           // target px per CSS px: the drawing is designed in CSS px,
+                                    // only the antialiasing works in target px
   uniform float uWhite;             // flat level of the ink (1 = white; lower = a flat dimmer white)
   // Tornado only (uLayer < 0 on the test page: all of this is skipped)
   uniform int uLayer;
@@ -135,23 +138,24 @@ const fragmentShader = /* glsl */`
 
     // Hard edge with dry-brush serration (each side its own noise), redrawn with the boil
     float side = t > 0.0 ? 1.0 : -1.0;
-    float n = 0.7 * vnoise(vec2(s * vLenPx * 0.07, side * 7.0 + seed) + uBoil)
-            + 0.3 * vnoise(vec2(s * vLenPx * 0.25, side * 3.0 + seed) - uBoil);
+    float lenCss = vLenPx / uPxScale, halfCss = vHalfPx / uPxScale;
+    float n = 0.7 * vnoise(vec2(s * lenCss * 0.07, side * 7.0 + seed) + uBoil)
+            + 0.3 * vnoise(vec2(s * lenCss * 0.25, side * 3.0 + seed) - uBoil);
     float wEdge = w * (1.0 + rough * uRough * (n - 0.5) * 2.0);
     float d = (wEdge - abs(t)) * vHalfPx;          // px inside the edge
-    float cov = smoothstep(-0.6, 0.6, d);
+    float cov = smoothstep(-0.6, 0.6, d);         // antialiasing: target px
 
     // Filament split: toward the tail the stroke divides into a few threads
     float splitAmt = split * smoothstep(0.45, 0.9, s);
     if (splitAmt > 0.0 && w > 0.0) {
       float lanes = fract(t / max(w, 0.05) * 1.4 + 0.5 + 0.25 * vnoise(vec2(s * 5.0, seed)));
-      float gapPx = abs(lanes - 0.5) * 2.0 * vHalfPx * w / 1.4;   // px to the lane boundary
+      float gapPx = abs(lanes - 0.5) * 2.0 * halfCss * w / 1.4;   // CSS px to the lane boundary
       cov *= 1.0 - splitAmt * (1.0 - smoothstep(0.0, 1.2 + 2.0 * splitAmt, gapPx));
     }
 
     // Dry brush: bristle streaks along the stroke, more where the pressure is low
     // (thin ends) and in dry strokes
-    float streak = vnoise(vec2(s * vLenPx * 0.012, t * vHalfPx * 0.45) + vec2(seed * 3.1, 0.0) + uBoil * 0.35);
+    float streak = vnoise(vec2(s * lenCss * 0.012, t * halfCss * 0.45) + vec2(seed * 3.1, 0.0) + uBoil * 0.35);
     float dryAmt = uDryBrush * dryness * (0.35 + 0.65 * (1.0 - clamp(w, 0.0, 1.0)));
     float th = 1.0 - dryAmt * 0.75;
     float sw = fwidth(streak) + 1e-4;
@@ -159,7 +163,7 @@ const fragmentShader = /* glsl */`
 
     // Mid-tone: halftone dots in stroke space (they travel with the stroke)
     if (tone < 0.999) {
-      vec2 p = vec2(s * vLenPx, t * vHalfPx) / uHalftoneCell;
+      vec2 p = vec2(s * lenCss, t * halfCss) / uHalftoneCell;
       float r = sqrt(max(tone, 0.0)) * 0.62;
       float dd = length(fract(p) - 0.5);
       float aa = fwidth(dd) + 1e-4;
@@ -168,7 +172,7 @@ const fragmentShader = /* glsl */`
 
     if (uLayer == 2) {
       // RC occluders: only the solid bodies of near-side strokes block light
-      if (cov < 0.5 || vDepth > 0.5 || w * vHalfPx < uOccOffset) discard;
+      if (cov < 0.5 || vDepth > 0.5 || w * halfCss < uOccOffset) discard;
       gl_FragColor = vec4(1.0);
       return;
     }
@@ -230,6 +234,7 @@ export class InkStrokes {
         uDepthContrast: { value: 0 }, uVeil: { value: 1 }, uWhite: { value: 1 },
         uLayer: { value: -1 }, uDepth: { value: null }, uUseDepth: { value: false },
         uTargetSize: { value: new THREE.Vector2(1, 1) }, uViewSize: { value: new THREE.Vector2(1, 1) },
+        uPxScale: { value: 1 },
         uHole: { value: new THREE.Vector3() }, uHoleAmount: { value: 0 },
         uLight: { value: null }, uHasLight: { value: false },
         uAmbientFluence: { value: 0 }, uLightThicken: { value: 0 }, uOccOffset: { value: 0 },
@@ -242,7 +247,12 @@ export class InkStrokes {
     this._len = []
   }
 
-  setViewport(w, h) { this.material.uniforms.uViewport.value.set(w, h) }
+  // pxScale: target px per CSS px. The drawing's look (serration, dry brush, halftone, min
+  // width) is in CSS px, so rendering the same strokes at a higher ratio only sharpens them.
+  setViewport(w, h, pxScale = 1) {
+    this.material.uniforms.uViewport.value.set(w, h)
+    this.material.uniforms.uPxScale.value = pxScale
+  }
 
   // The drawing boils: a new noise seed at boilRate (only when boil is on). Motion is
   // untouched: callers move the paths every frame.

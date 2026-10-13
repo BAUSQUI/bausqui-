@@ -67,7 +67,8 @@ export class TornadoLighting {
     this.bufferSize = new THREE.Vector2()
     this.projected = new THREE.Vector3()
     this.viewPos = new THREE.Vector3()
-    // The swirl's halves, at CSS resolution (the dither is sized in CSS pixels)
+    // The swirl's halves: SHARP layers, at drawing-buffer size (1:1 with the screen, so
+    // nearest sampling in the composite is exact)
     const layer = () => new THREE.WebGLRenderTarget(1, 1, {
       minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false,
     })
@@ -88,10 +89,11 @@ export class TornadoLighting {
     // A window that opens hidden can report 0×0: never allocate a zero-size target
     this.bufferSize.set(Math.max(1, this.bufferSize.x), Math.max(1, this.bufferSize.y))
     this.rc.setSize(w, h, this.bufferSize.x, this.bufferSize.y)
-    // Dithering runs at CSS pixel resolution rather than multiplying its cost by DPR².
-    const cw = Math.max(1, Math.round(w)), ch = Math.max(1, Math.round(h))
-    this.swirlBack.setSize(cw, ch)
-    this.swirlFront.setSize(cw, ch)
+    // Sharp layers (strokes, particles, thumbnails, hovered work, composite) at the
+    // drawing buffer; soft layers (SDF / JFA / cascades) stay at their reduced CSS-based
+    // resolution inside RadianceCascades and are upsampled bilinearly in the composite
+    this.swirlBack.setSize(this.bufferSize.x, this.bufferSize.y)
+    this.swirlFront.setSize(this.bufferSize.x, this.bufferSize.y)
     this.highlightTarget.setSize(this.bufferSize.x, this.bufferSize.y)
   }
 
@@ -157,6 +159,7 @@ export class TornadoLighting {
       // The swirl's two halves, sorted against the works' depth
       const su = swirl?.material.uniforms
       if (swirl) {
+        swirl.pxScale = this.bufferSize.y / Math.max(1, this.height)
         su.uDepth.value = this.rc.albedoTarget.depthTexture
         su.uUseDepth.value = true
         su.uHole.value.set(hole?.x ?? 0, this.height - (hole?.y ?? 0), hole?.radius ?? 0)

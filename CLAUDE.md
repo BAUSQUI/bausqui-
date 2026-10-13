@@ -353,6 +353,15 @@ the work, see "Tornado home" below).
   - Performance: while a project is open the full tornado (works, RC, collisions) is paused;
     only the eye renders (no RC).
 
+- **Resolution (keep):** SHARP layers (ink strokes + particles in the swirl targets, works'
+  albedo, hovered work, composite) render at the drawing buffer = `min(devicePixelRatio, 2)`.
+  SOFT layers (occluders, emissive, JFA/SDF, cascades) stay at `sdfScale` (0.5) of CSS px and
+  are upsampled bilinearly in the composite. The ink's look constants (min thread width,
+  serration, dry brush, filament gaps, halftone cell, particle size) are in CSS px via
+  `uPxScale`, so a higher ratio only sharpens the drawing. Adaptive: after entering, ~3s of
+  the full tornado is measured; under 50fps only the sharp ratio drops to 1.5 (never lower
+  on high-DPI). `?perf=1` shows live FPS, ratio and target sizes.
+
 ---
 
 ## Dev & testing rules

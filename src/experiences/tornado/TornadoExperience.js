@@ -18,6 +18,11 @@ import { InkEye } from './inkEye.js'
 import { TornadoAudio } from './tornadoAudio.js'
 import { state } from '../../state.js'
 
+// Adaptive quality: the sharp layers render at min(devicePixelRatio, 2); if the full tornado
+// runs under ~50fps during its first seconds, they drop to 1.5 (never lower on high-DPI)
+const SHARP_RATIO_MIN = 1.5
+const QUALITY_FPS = 50
+const QUALITY_WINDOW = 3     // s of full-tornado frames measured, after a short settle
 const HOLE_SCALE = 1.5   // the hover hole in the strokes is ~1.5× the hovered work
 const TAU = Math.PI * 2
 const FOCUS_DISTANCE = 1.2   // the clicked work ends this far in front of the camera, filling the view
@@ -231,6 +236,7 @@ export class TornadoExperience extends Experience {
     }
     // Hero scrolled away (<10% visible): skip the update loop and the RC passes
     if (!this.heroVisible && !this.transition.busy) return
+    this.adaptQuality()
     this.transition.update(dt)
     const tr = this.transition
     // Loading: the tornado assembles from the loader's REAL progress and doesn't turn yet;
@@ -598,8 +604,54 @@ export class TornadoExperience extends Experience {
     if (this.openOverlays.size > 0) gui.hide()
   }
 
+  // Measures the full tornado's frame rate once, after entering (wall clock, ignoring gaps
+  // such as a hidden tab or the hero scrolled away). Under QUALITY_FPS only the sharp layers'
+  // ratio drops, to SHARP_RATIO_MIN; the soft RC layers are CSS-based and don't change.
+  // `?perf=1` shows the live FPS and the ratio in use.
+  adaptQuality() {
+    const now = performance.now()
+    const q = this.quality ??= { frames: 0, t0: 0, last: 0, done: false, fps: 0, readout: null, rolling: [] }
+    if (new URLSearchParams(location.search).get('perf') === '1') this.perfReadout(q, now)
+    q.last ||= now
+    const gap = now - q.last
+    q.last = now
+    if (q.done || !(window.__loader?.entered ?? true)) return
+    if (gap > 250) { q.t0 = 0; q.frames = 0 }          // interrupted: start the window again
+    if (!q.t0) { q.t0 = now + 500; return }             // settle after entering / resuming
+    if (now < q.t0) return
+    q.frames++
+    const elapsed = (now - q.t0) / 1000
+    if (elapsed < QUALITY_WINDOW) return
+    q.done = true
+    q.fps = q.frames / elapsed
+    const ratio = this.renderer.getPixelRatio()
+    if (q.fps < QUALITY_FPS && ratio > SHARP_RATIO_MIN) {
+      this.renderer.setPixelRatio(SHARP_RATIO_MIN)
+      this.resize(window.innerWidth, window.innerHeight)
+      q.lowered = ratio
+    }
+  }
+
+  perfReadout(q, now) {
+    if (!q.readout) {
+      q.readout = document.createElement('div')
+      q.readout.style.cssText = 'position:fixed;left:8px;top:50%;z-index:9998;font:10px/1.4 monospace;color:#fff;background:#050505;padding:4px 6px;pointer-events:none;white-space:pre'
+      document.body.append(q.readout)
+    }
+    q.rolling.push(now)
+    while (q.rolling[0] < now - 1000) q.rolling.shift()
+    if ((q.tick = (q.tick || 0) + 1) % 15) return
+    const buf = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+    q.readout.textContent = `fps ${q.rolling.length}  dpr ${window.devicePixelRatio}  ratio ${this.renderer.getPixelRatio()}
+` +
+      `sharp ${buf.x}x${buf.y}  sdf ${this.lighting?.rc.sdfRes?.x ?? '-'}x${this.lighting?.rc.sdfRes?.y ?? '-'}
+` +
+      (q.done ? `measured ${q.fps.toFixed(1)} fps${q.lowered ? ` → ratio ${q.lowered} → ${SHARP_RATIO_MIN}` : ' (kept)'}` : 'measuring…')
+  }
+
   dispose() {
     this.disposed = true
+    this.quality?.readout?.remove()
     this.gui?.destroy()
     this.hover?.dispose()
     this.lighting?.dispose()

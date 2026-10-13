@@ -184,12 +184,17 @@ export class InkTornado {
     this.material.uniforms.uViewSize.value.set(w, h)
   }
 
+  // Target px per CSS px of the sharp layers (strokes + particles); TornadoLighting sets it
+  pxScale = 1
+
   // Which layer the next render draws (0 behind works, 1 the rest, 2 RC occluders)
   setLayer(layer, w, h) {
     const u = this.material.uniforms
     u.uLayer.value = layer
     u.uTargetSize.value.set(w, h)
-    this.strokes.setViewport(w, h)
+    // The occluder target is the soft (low-res) RC input: its stroke widths and threshold
+    // stay in its own px, as tuned; the visible layers draw at the sharp ratio
+    this.strokes.setViewport(w, h, layer === 2 ? 1 : w / this.viewW)
   }
 
   // dt: wall clock (boil, flecks); time: the tornado's clock (stops on hover);
@@ -262,7 +267,7 @@ export class InkTornado {
     this.updateFlecks(dt, list, q)
     this.strokes.setStrokes(list)
     // While assembling, the particles spiral in on wall time (the tornado clock waits for 100%)
-    this.particles.update(this.assembly ? dt : dTime, this.boil)
+    this.particles.update(this.assembly ? dt : dTime, this.boil, this.pxScale)
   }
 
   buildPath(s, stroke, p, camDir, fl, works) {
