@@ -5,6 +5,8 @@
 //   linked to it by a 1px line;
 // - leaving waits 150ms before hiding, then everything fades and the tornado spins up;
 // - click opens the project. Touch: first tap lights the work, second tap opens it.
+// Touch devices with the auto showcase (autoShowcase.js) use `layout: 'below'`: the label is
+// centered below the featured work (no connector) and taps are handed to `onTap(mesh|null)`.
 import * as THREE from 'three'
 import { getProject } from '../../data/projects.js'
 
@@ -15,9 +17,12 @@ const HOLE_TIME = 0.3       // s: the swirl's veil clears around the work (and c
 const MIN_TOP = 150         // px: keep the label clear of the logo / nav block
 const MIN_BOTTOM = 90       // px: and of the sound / language toggles
 const LINK_GAP = 0.3        // connector stops this far from the label, × the title size
+const BELOW_GAP = 18        // px between the featured work and its label (layout 'below')
 
 export class WorkHover {
-  constructor({ camera, canvas, hero, getMeshes, onOpen }) {
+  constructor({ camera, canvas, hero, getMeshes, onOpen, layout = 'side', onTap = null }) {
+    this.layout = layout
+    this.onTap = onTap
     this.camera = camera
     this.canvas = canvas
     this.hero = hero
@@ -111,6 +116,11 @@ export class WorkHover {
     if (cardTag?.dataset.es) { this.tag.dataset.es = cardTag.dataset.es; this.tag.dataset.en = cardTag.dataset.en }
     else { delete this.tag.dataset.es; delete this.tag.dataset.en }
     this.year.textContent = card?.querySelector('.card-year')?.textContent || project?.data?.año || ''
+    if (this.layout === 'below') {
+      this.label.classList.add('is-below', 'is-visible')
+      this.place()
+      return
+    }
     // The label goes to the edge opposite the work; fixed for as long as it's shown
     const screen = this.toScreen(mesh.position)
     this.side = screen.x < window.innerWidth / 2 ? 'right' : 'left'
@@ -119,6 +129,13 @@ export class WorkHover {
     this.label.classList.add('is-visible')
     this.link.classList.add('is-visible')
     this.place()
+  }
+
+  // Light `mesh` and show its label now, with no hover timers (the auto showcase)
+  feature(mesh) {
+    clearTimeout(this.hideTimer)
+    this.hideTimer = null
+    if (mesh !== this.hovered) this.show(mesh)
   }
 
   hide() {
@@ -138,6 +155,11 @@ export class WorkHover {
 
   handleClick(e) {
     if (!this.enabled) return
+    if (this.onTap) {
+      // Auto showcase: the cycle decides (tap empty space = nothing)
+      this.onTap(this.pick(e.clientX, e.clientY))
+      return
+    }
     if (this.pointerType === 'touch') {
       // First tap lights the work, a second tap on the same work opens it
       const hit = this.pick(e.clientX, e.clientY)
@@ -166,6 +188,18 @@ export class WorkHover {
     const mesh = this.hovered
     if (!mesh) return
     const W = window.innerWidth, H = window.innerHeight
+    if (this.layout === 'below') {
+      // Centered below the work's lowest projected corner, kept inside the screen
+      let bottom = -Infinity
+      for (const [x, y] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) {
+        bottom = Math.max(bottom, this.toScreen(mesh.localToWorld(new THREE.Vector3(x, y, 0))).y)
+      }
+      const cx = this.toScreen(mesh.position).x
+      const h = this.label.offsetHeight
+      const top = Math.min(bottom + BELOW_GAP, H - h - MIN_BOTTOM)
+      this.label.style.transform = `translate(${cx}px, ${top}px) translateX(-50%)`
+      return
+    }
     const center = this.toScreen(mesh.position)
     const h = this.label.offsetHeight
     const top = Math.min(Math.max(center.y - h / 2, MIN_TOP), Math.max(MIN_TOP, H - h - MIN_BOTTOM))
@@ -186,7 +220,7 @@ export class WorkHover {
 
   // Call once per rendered frame, after this frame's transforms are applied
   update(dt) {
-    if (this.enabled && this.pointer && this.pointerType !== 'touch') {
+    if (this.enabled && this.pointer && this.pointerType !== 'touch' && !this.onTap) {
       this.setHovered(this.pick(this.pointer.x, this.pointer.y))
     }
     const stop = this.hovered ? 0 : 1

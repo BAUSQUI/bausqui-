@@ -141,7 +141,9 @@ body.tornado-home .lil-gui.root { top: 110px; right: var(--home-gutter); }
 body.tornado-home.is-video .tornado-scroll-hint,
 body.tornado-home.info-active .tornado-scroll-hint,
 body.tornado-home.is-video .tornado-label,
-body.tornado-home.is-video .tornado-link { visibility: hidden; }
+body.tornado-home.is-video .tornado-link,
+body.tornado-home.is-video .tornado-glint,
+body.tornado-home.info-active .tornado-glint { visibility: hidden; }
 
 /* ── Hover label + connector (below the list, above the canvas) ──
    Everything in the label scales with the title size (--label-size): the pills are sized
@@ -178,6 +180,39 @@ body.tornado-home.is-video .tornado-link { visibility: hidden; }
 .tornado-label-tags .card-tag,
 .tornado-label-tags .card-year { font-size: 1em; padding: 0.35em 0.9em; }
 .tornado-label.is-right .tornado-label-tags { justify-content: flex-end; }
+/* Touch (auto showcase): centered below the featured work, no connector */
+.tornado-label.is-below { left: 0; max-width: 90vw; text-align: center; }
+.tornado-label.is-below .tornado-label-tags { justify-content: center; }
+
+/* Touch: the tap affordance on the featured work's corner. Drawn ink: a 4-point glint with
+   concave sides + two Kirby dots, flat white, hard edges. It pops in and twinkles twice
+   during the hold (scale only, the shape never blurs); reduced motion: static. */
+.tornado-glint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  z-index: 6;
+  pointer-events: none;
+  fill: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.tornado-glint.is-visible { opacity: 1; }
+.tornado-glint > * { transform-box: fill-box; transform-origin: center; transform: scale(0); }
+.tornado-glint.is-static > * { transform: scale(1); }
+.tornado-glint.is-twinkling > * { animation: tornado-twinkle 1.3s ease-out 0.15s 2 both; }
+.tornado-glint.is-twinkling .tornado-glint-dot { animation-delay: 0.3s; }
+.tornado-glint.is-twinkling .tornado-glint-dot-2 { animation-delay: 0.42s; }
+@keyframes tornado-twinkle {
+  0%   { transform: scale(0); }
+  22%  { transform: scale(1.2); }
+  38%  { transform: scale(1); }
+  68%  { transform: scale(0.45); }
+  100% { transform: scale(1); }
+}
 .tornado-link {
   position: fixed;
   inset: 0;

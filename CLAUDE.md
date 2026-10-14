@@ -364,6 +364,36 @@ the work, see "Tornado home" below).
 
 ---
 
+## Mobile behavior (touch devices only)
+
+Detected by input, never by width: `matchMedia('(hover: none) and (pointer: coarse)')`
+(`?touch=1` forces it for testing on a desktop). Desktop is untouched.
+
+- **Scale:** the camera is `touchZoom` (1.35) closer, so the funnel fills most of the screen
+  width and the works read clearly (the wide top crops). Sharpness rules unchanged.
+- **Auto showcase** (`autoShowcase.js`): no hover, so the tornado rescues works by itself.
+  - A work leaves its slot for the CENTER (camera-facing, ~62% of the screen width, a little
+    above the middle, in front of the funnel); the tornado decelerates to a stop and the work
+    lights up in color: the same WorkHover states as the desktop hover (stop, highlight,
+    stroke hole, inner lights dimmed).
+  - Label: title + category / year pills centered BELOW the work (no connector line).
+  - Tap affordance: a drawn 4-point glint (concave sides, flat white, hard edges) + two Kirby
+    dots on the work's top-right corner; pops in and twinkles twice during the hold.
+  - Timings (lil-gui "Mobile showcase"): approach 0.8s, hold 1.7s, release 0.8s, free spin
+    2.5s. Order: every project once (one random loaded thumbnail each, near side preferred)
+    before repeating; never the same project twice in a row.
+- **Taps:** the featured work → explosion + project (as on desktop). Another work → it
+  becomes the featured work now (the previous one eases back); a second tap opens it. Empty
+  space → nothing. After a project closes, the cycle resumes with the next work.
+- **Pauses:** while touching and for 0.8s after a touch or scroll; while the hero is out of
+  view; while a project or About is open (the showcase resets and restarts with a free spin).
+- **Sound:** the auto rescue reuses the hover's calm state (values locked); lil-gui toggle
+  "calm audio (auto)" turns that off for the cycle (taps always calm, like a hover).
+- Scroll chevrons and the works list are unchanged (direct access).
+- Reduced motion: the cycle runs 1.6× slower and the glint is static.
+
+---
+
 ## Dev & testing rules
 
 - **Media guard** (`src/ui/mediaGuard.js`): with `navigator.webdriver === true` or `?mute=1`,

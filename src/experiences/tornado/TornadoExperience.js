@@ -16,6 +16,7 @@ import { InkTornado } from './inkTornado.js'
 import { ClickTransition } from './clickTransition.js'
 import { InkEye } from './inkEye.js'
 import { TornadoAudio } from './tornadoAudio.js'
+import { AutoShowcase } from './autoShowcase.js'
 import { state } from '../../state.js'
 
 // Adaptive quality: the sharp layers render at min(devicePixelRatio, 2); if the full tornado
@@ -23,6 +24,11 @@ import { state } from '../../state.js'
 const SHARP_RATIO_MIN = 1.5
 const QUALITY_FPS = 50
 const QUALITY_WINDOW = 3     // s of full-tornado frames measured, after a short settle
+// Touch devices (CLAUDE.md "Mobile behavior"): detected by input, never by screen width.
+// `?touch=1` forces it (testing on a desktop).
+const IS_TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+  new URLSearchParams(location.search).get('touch') === '1'
+const TOUCH_ZOOM = 1.35   // touch: the camera this much closer, so the tornado fills the width
 const HOLE_SCALE = 1.5   // the hover hole in the strokes is ~1.5× the hovered work
 const TAU = Math.PI * 2
 const FOCUS_DISTANCE = 1.2   // the clicked work ends this far in front of the camera, filling the view
@@ -106,8 +112,10 @@ export class TornadoExperience extends Experience {
     this.eye = new InkEye()
     // Sound: music-port + two tornado stems; the storm calms (tornado stems out, only
     // music-port left) while a work is hovered (incl. its leave delay) and during the explosion
+    // (The auto showcase on touch reuses the hover state; a GUI toggle can leave it out.)
     this.audio = new TornadoAudio({
-      isCalm: () => Boolean(this.hover?.hovered) || this.transition.mode === 'explode' || this.transition.mode === 'handoff',
+      isCalm: () => (Boolean(this.hover?.hovered) && !(this.showcase?.auto && !this.showcase.params.calmAudio)) ||
+        this.transition.mode === 'explode' || this.transition.mode === 'handoff',
     })
     this.hole = { x: 0, y: 0, radius: 0, amount: 0 }
     this.holePoint = new THREE.Vector3()
@@ -115,6 +123,15 @@ export class TornadoExperience extends Experience {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x050505)
     this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100)
+    this.isTouch = IS_TOUCH
+    this.params.touchZoom = TOUCH_ZOOM
+    // Touch: no hover, so the tornado rescues works by itself (autoShowcase.js)
+    this.showcase = IS_TOUCH ? new AutoShowcase({
+      camera: this.camera,
+      reducedMotion: this.reducedMotion,
+      onFeature: (mesh) => this.hover?.feature(mesh),
+      onRelease: () => this.hover?.hide(),
+    }) : null
 
     this.geometry = new THREE.PlaneGeometry(1, 1)
     this.group = new THREE.Group()
@@ -148,6 +165,16 @@ export class TornadoExperience extends Experience {
       hero: this.homeLayout.hero,
       getMeshes: () => this.meshes.filter(m => m.visible),
       onOpen: (id, mesh, highlight) => this.openProject(id, mesh, highlight),
+      // Touch: label centered below the featured work; tap the featured work = open it,
+      // tap another work = feature it now (a second tap opens it), empty space = nothing
+      ...(this.showcase ? {
+        layout: 'below',
+        onTap: (mesh) => {
+          if (!mesh || !this.hover.enabled) return
+          if (mesh === this.showcase.featured) this.hover.open(mesh)
+          else this.showcase.feature(mesh, false)
+        },
+      } : {}),
     })
 
     this.initGui()
@@ -212,10 +239,14 @@ export class TornadoExperience extends Experience {
     // screens the width limit wins; let the wide top crop slightly so it still fills the screen.
     const heightFill = 0.85
     const widthFill = this.camera.aspect < 0.8 ? 1.15 : 0.95
-    const dist = Math.max(
+    let dist = Math.max(
       halfH / (Math.tan(halfFov) * heightFill),
       halfW / (Math.tan(halfFov) * this.camera.aspect * widthFill),
     )
+    // Touch: closer, so the funnel fills most of the screen width and the works read clearly
+    if (this.isTouch) dist /= p.touchZoom
+    // The showcase brings works to the center in front of the funnel's near side
+    if (this.showcase) this.showcase.frontDepth = dist - p.topRadius * 0.9
     this.camera.position.set(0, p.height * 0.08, dist)
     this.camera.lookAt(0, 0, 0)
   }
@@ -255,11 +286,17 @@ export class TornadoExperience extends Experience {
     // Transforms are recomputed every frame from the clock: continuous motion
     for (const mesh of this.meshes) slotTransform(mesh.userData.slot, this.time, this.params, mesh)
     this.popThumbs()
+    // Touch: the auto showcase (frozen while loading and while the click transition runs)
+    if (this.showcase) {
+      this.showcase.update(dt, this.meshes, { frozen: !entered || tr.exploded })
+      this.showcase.apply()
+    }
     if (tr.burst > 0 || tr.focus > 0) this.applyBurst(tr)
     updateDebris(this.debris, this.time, this.params)
     // Raycast against the transforms just applied
     this.hover.enabled = entered && !tr.exploded
     this.hover.update(dt)
+    this.showcase?.placeGlint()
     this.innerLights.update(dt, this.time, this.params, this.hover.highlight)
     // The lights come up with the assembly
     if (assembling) for (const l of this.innerLights.lights) l.intensity *= d * d
@@ -466,11 +503,12 @@ export class TornadoExperience extends Experience {
 
   setHeroVisible(visible) {
     this.heroVisible = visible
-    if (!visible) this.hover?.clear(true)
+    if (!visible) { this.hover?.clear(true); this.showcase?.reset() }
   }
 
   onOverlay(kind, open) {
-    if (open) { this.openOverlays.add(kind); this.hover?.clear(true) }
+    // A project / About over the home: the showcase restarts (with the next work) on return
+    if (open) { this.openOverlays.add(kind); this.hover?.clear(true); this.showcase?.reset() }
     else this.openOverlays.delete(kind)
     // Closing the project after an explosion: the tornado reassembles
     if (!open && kind === 'project' && this.transition.exploded) this.transition.assemble()
@@ -563,6 +601,16 @@ export class TornadoExperience extends Experience {
     click.add(tq, 'handoffEnd', 0.2, 3, 0.01).name('handoff end (s)')
     click.add(tq, 'returnDuration', 0.2, 3, 0.01).name('reassembly (s)')
     const ap = this.audio.params
+    if (this.showcase) {
+      const sc = gui.addFolder('Mobile showcase')
+      const sp = this.showcase.params
+      sc.add(sp, 'approach', 0.2, 3, 0.05).name('approach (s)')
+      sc.add(sp, 'hold', 0.5, 10, 0.1).name('hold (s)')
+      sc.add(sp, 'release', 0.2, 3, 0.05).name('release (s)')
+      sc.add(sp, 'free', 0, 10, 0.1).name('free spin (s)')
+      sc.add(sp, 'calmAudio').name('calm audio (auto)')
+      sc.add(p, 'touchZoom', 1, 2.5, 0.01).name('touch zoom').onChange(refit)
+    }
     const sound = gui.addFolder('Sound')
     sound.add(ap, 'master', 0, 1, 0.01).name('master volume')
     sound.add(ap, 'port', 0, 1, 0.01).name('music-port volume')
@@ -652,6 +700,7 @@ export class TornadoExperience extends Experience {
   dispose() {
     this.disposed = true
     this.quality?.readout?.remove()
+    this.showcase?.dispose()
     this.gui?.destroy()
     this.hover?.dispose()
     this.lighting?.dispose()
