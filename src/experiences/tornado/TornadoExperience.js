@@ -17,6 +17,7 @@ import { ClickTransition } from './clickTransition.js'
 import { InkEye } from './inkEye.js'
 import { TornadoAudio } from './tornadoAudio.js'
 import { AutoShowcase } from './autoShowcase.js'
+import { IS_TOUCH } from '../../ui/touch.js'
 import { state } from '../../state.js'
 
 // Adaptive quality: the sharp layers render at min(devicePixelRatio, 2); if the full tornado
@@ -24,10 +25,6 @@ import { state } from '../../state.js'
 const SHARP_RATIO_MIN = 1.5
 const QUALITY_FPS = 50
 const QUALITY_WINDOW = 3     // s of full-tornado frames measured, after a short settle
-// Touch devices (CLAUDE.md "Mobile behavior"): detected by input, never by screen width.
-// `?touch=1` forces it (testing on a desktop).
-const IS_TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
-  new URLSearchParams(location.search).get('touch') === '1'
 const TOUCH_ZOOM = 1.35   // touch: the camera this much closer, so the tornado fills the width
 const HOLE_SCALE = 1.5   // the hover hole in the strokes is ~1.5× the hovered work
 const TAU = Math.PI * 2

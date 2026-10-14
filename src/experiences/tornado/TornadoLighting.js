@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RadianceCascades } from './rc/RadianceCascades.js'
 import { LazyLight } from './rc/LazyLight.js'
+import { IS_TOUCH } from '../../ui/touch.js'
 import { MAX_INNER_LIGHTS } from './innerLights.js'
 
 const SWIRL_BACK = 0, SWIRL_FRONT = 1, SWIRL_OCCLUDER = 2   // InkTornado layers: behind works, the rest, RC occluders
@@ -20,7 +21,8 @@ export class TornadoLighting {
   constructor(renderer) {
     this.renderer = renderer
     this.rc = new RadianceCascades(renderer)
-    this.light = new LazyLight()
+    // Touch: the light is only touch feedback (on while a finger is down, then fades out)
+    this.light = new LazyLight({ touch: IS_TOUCH })
     this.params = {
       // Cursor light: a subtle light, not a spotlight. The default is the minimum of the
       // panel's range (CURSOR_LIGHT_MIN); it fades in from 0 up to it, never above.

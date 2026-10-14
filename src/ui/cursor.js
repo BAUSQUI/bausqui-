@@ -3,6 +3,8 @@
 // no trail. (The old radial exit burst is gone: closing a project returns through the
 // tornado reassembly.)
 // Hidden until the mouse first moves, and while it is outside the window.
+// Touch devices: no cursor at all (never rendered, no animation loop).
+import { IS_TOUCH } from './touch.js'
 
 let cursorCanvas = null
 let ctx = null
@@ -19,7 +21,7 @@ export function resizeCursor() {
 }
 
 export function initCursor() {
-  if (started) return   // one cursor system, one animation loop
+  if (started || IS_TOUCH) return   // one cursor system, one animation loop; none on touch
   started = true
   cursorCanvas = document.getElementById('cursor-canvas')
   ctx = cursorCanvas.getContext('2d')

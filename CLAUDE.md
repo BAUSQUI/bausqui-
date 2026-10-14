@@ -389,6 +389,11 @@ Detected by input, never by width: `matchMedia('(hover: none) and (pointer: coar
   view; while a project or About is open (the showcase resets and restarts with a free spin).
 - **Sound:** the auto rescue reuses the hover's calm state (values locked); lil-gui toggle
   "calm audio (auto)" turns that off for the cycle (taps always calm, like a hover).
+- **No cursor:** the cursor dot is never rendered and its animation loop never starts
+  (`ui/cursor.js`). The cursor LIGHT is touch feedback only (`LazyLight` `touch`): it appears
+  at the touch point on touchstart, follows the finger while dragging and fades out over
+  ~600ms after touchend; otherwise it's off (base light + inner lights). Detection is shared
+  in `ui/touch.js`.
 - Scroll chevrons and the works list are unchanged (direct access).
 - Reduced motion: the cycle runs 1.6× slower and the glint is static.
 
