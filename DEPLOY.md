@@ -24,7 +24,7 @@ Current state of `public/videos/`:
 | `TAHADIS.mp4` | 798 MB |
 | `Arena.mp4` | 289 MB |
 | `SOMA.mp4` | 187 MB |
-| `mutante.mp4`, `ghost.mp4` | ~100 MB each |
+| `mutante.mp4` | ~100 MB |
 | `papotta.mp4`, `tiempo_real.mp4` | <100 MB |
 
 ### Option A — Compress in place

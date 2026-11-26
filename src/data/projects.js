@@ -60,16 +60,26 @@ const proyectos = {
     volumen: 0.5, autores: 'Bautista Ausqui'
   },
   'Icosphere001': {
-    nombre: 'GHOST PERROS', video: '/videos/ghost.webm',
+    nombre: '¡FA!',
+    subtitulo: { es: 'Movistar Arena', en: 'Movistar Arena' },
+    video: '/videos/fa.mp4',
     año: '2026',
-    cliente: { es: 'Personal', en: 'Personal' },
-    tipo: { es: 'Audiovisual', en: 'Audiovisual' },
+    cliente: { es: 'Movistar Arena', en: 'Movistar Arena' },
+    tipo: { es: 'PUESTA EN VIVO', en: 'LIVE SHOW' },
+    // From fa-text.md, as written. `html`: both descriptions carry formatting (bold labels,
+    // bullet list), rendered as HTML instead of plain text
+    html: true,
     descripcion: {
-      es: 'Diseño Espacial y Operación Sincrónica (Luces y Visuales) Desarrollo integral de la puesta escénica, abarcando desde la concepción espacial y el montaje inicial (momento cero) hasta la operación en vivo. El diseño central consistió en un sistema de video mapping proyectado sobre la infraestructura del lugar para generar la ilusión óptica de un cubo flotando en el espacio. Durante el espectáculo, se ejecutó el control simultáneo y sincronizado de la parrilla lumínica vía DMX y el sistema de visuales a través de TouchDesigner y Resolume Arena, logrando una integración total entre el espacio físico y el medio digital.',
-      en: 'Spatial Design and Synchronous Operation (Lighting and Visuals) Comprehensive development of the stage production, spanning from spatial conception and the initial setup (from the ground up) to the live operation. The core design consisted of a video mapping system projected onto the venues infrastructure to generate the optical illusion of a cube floating in space. During the performance, simultaneous and synchronized control of the lighting rig via DMX and the visual system via TouchDesigner and Resolume Arena was executed, achieving total integration between the physical space and the digital medium.'
+      es: "Fiesta ¡FA! de Mex Urtizberea · 5 años · Movistar Arena, Buenos Aires · 2026<br>Contenido visual en tiempo real y asistencia de dirección y de diseño de puesta.",
+      en: "Fiesta ¡FA! by Mex Urtizberea · 5th anniversary · Movistar Arena, Buenos Aires · 2026<br>Real-time visual content, plus direction and stage design assistance."
     },
-    descripcionFull: null,
-    manual: { carpeta: '/pdf/ghost/', frames: 7 },
+    descripcionFull: {
+      es: "<p>¡FA! empezó como una tertulia en la casa de Mex Urtizberea y se convirtió en una fiesta itinerante donde artistas de distintas generaciones comparten escenario. Para la edición aniversario en el Movistar Arena, la consigna fue clara: no trasladar la casa de Mex al estadio, sino armar una noche que sorprendiera a 15.000 personas todo el tiempo.</p><p><strong>La puesta.</strong> La propuesta se apoyó en la sorpresa: láser, apariciones de invitados y pantallas que se mueven y cambian el espacio en cada momento. El escenario combina un backwall LED de 20,8 × 9,6 m con cinco pantallas móviles a alturas escalonadas.</p><p>Contenido en código, trabajando con agentes de IA (Claude Code y Codex) como herramientas de producción:</p><ul><li><strong>Visuales por invitado:</strong> animaciones generadas en WebGL/GLSL.</li><li><strong>Efectos CCTV:</strong> plugins FFGL propios para Resolume que tratan las cámaras de la IMAG en tiempo real, con glow y halation, fragmentación, silueta aislada y transiciones slit-scan entre planos.</li><li><strong>Motores generativos y tipográficos:</strong> un mundo de partículas que forma paisajes y nombres, un motor tipográfico para presentar a cada artista y motores en TouchDesigner controlados por MIDI (ruido estilo Ikeda, estrellas, prisma, horizonte), con salida independiente al backwall o a las pantallas móviles.</li></ul><p>Todo armado para los operadores de Resolume (VJ), con estructura IN/LOOP/OUT, faders maestros y un consumo de GPU acotado.</p><p>Para el momento del vivo se trabajó un guion del show: un showrun con columnas por área (CCTV, FX, video, luces, seguidores, posiciones) que bajaba a guiones por departamento. Para seguirlo en vivo se desarrolló GuionGO, una app de show calling offline inspirada en QLab y Ontime. Lee el guion directo de la planilla, marca warning, standby y GO para cada área, controla tiempos planificados contra reales y exporta un PDF limpio para cada departamento.</p><p><strong>Créditos</strong><br>Dirección de arte y diseño de puesta: Sofía Gabrieludis · Tomás Salgado</p>",
+      en: "<p>¡FA! started as a gathering at Mex Urtizberea's house and grew into a traveling party where artists from different generations share the stage. For the anniversary edition at Movistar Arena, the brief was clear: not to move Mex's house into the arena, but to build a night that kept surprising 15,000 people from start to finish.</p><p><strong>The staging.</strong> The concept was built on surprise: lasers, guest appearances and screens that move and reshape the space moment by moment. The stage combines a 20.8 × 9.6 m LED backwall with five moving screens at staggered heights.</p><p>Content built in code, with AI agents (Claude Code and Codex) as production tools:</p><ul><li><strong>Visuals per guest:</strong> animations generated in WebGL/GLSL.</li><li><strong>CCTV effects:</strong> custom FFGL plugins for Resolume that process the IMAG cameras in real time, with glow and halation, fragmentation, isolated silhouettes and slit-scan transitions between shots.</li><li><strong>Generative and typographic engines:</strong> a particle world that forms landscapes and names, a typographic engine to introduce each artist, and MIDI-controlled TouchDesigner engines (Ikeda-style noise, stars, prism, horizon), each able to output independently to the backwall or the moving screens.</li></ul><p>Everything was built for the Resolume operators (VJs), with an IN/LOOP/OUT structure, master faders and a tight GPU budget.</p><p>For the live show, a master script was put together: a show run with columns per area (CCTV, FX, video, lights, follow spots, positions) that broke down into scripts for each department. To call the show live, GuionGO was developed: an offline show-calling app inspired by QLab and Ontime. It reads the script straight from the spreadsheet, marks warning, standby and GO for each area, tracks planned against actual times and exports a clean PDF for each department.</p><p><strong>Credits</strong><br>Art direction and stage design: Sofía Gabrieludis · Tomás Salgado</p>"
+    },
+    // Manual frames go in /public/pdf/fa/01.jpg, 02.jpg…; raise `frames` to their count
+    // (0 keeps the manual section hidden)
+    manual: { carpeta: '/pdf/fa/', frames: 13 },
     volumen: 0.5,
     autores: 'Bautista Ausqui'
   },
@@ -137,7 +147,7 @@ const PROJECT_INDEX = [
   { id: 'primitivo',   card: 'PRIMITIVO',    icosphere: 'Icosphere005', thumbs: { folder: 'primitivo',      count: 6 } },
   { id: 'papota',      card: 'PAPOTA',       icosphere: 'Icosphere004', thumbs: { folder: 'papotta',        count: 6 } },
   { id: 'dualidad',    card: 'IMMERSIVE',    icosphere: 'Icosphere003', thumbs: { folder: 'PortfolioVideo', count: 6 } },
-  { id: 'ghost',       card: 'GHOST PERROS', icosphere: 'Icosphere001', thumbs: { folder: 'ghost',          count: 6 } },
+  { id: 'fa',          card: 'FA',           icosphere: 'Icosphere001', thumbs: { folder: 'fa',             count: 6 } },
   { id: 'poseido',     card: 'POSEIDO',      icosphere: 'Icosphere002', thumbs: { folder: null,             count: 0 } },
   { id: 'tahadis',     card: 'TAHADIS',      icosphere: 'Icosphere004', thumbs: { folder: 'TAHADIS',        count: 6 } },
   { id: 'tiempo-real', card: 'TIEMPO REAL',  icosphere: 'Icosphere001', thumbs: { folder: 'tiempo_real',    count: 6 } },

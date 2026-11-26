@@ -73,8 +73,8 @@ export function showVideo(id) {
     subtituloEl.style.display = sub ? 'block' : 'none'
   }
   document.getElementById('abstract-meta').textContent = `${proyecto?.año||''} / ${tr(proyecto?.cliente)} / ${tr(proyecto?.tipo)}`
-  if (shortDesc) shortDesc.textContent = tr(proyecto?.descripcion)
-  if (fullDesc) fullDesc.textContent = tr(proyecto?.descripcionFull)
+  setDescription(shortDesc, proyecto, tr(proyecto?.descripcion))
+  setDescription(fullDesc, proyecto, tr(proyecto?.descripcionFull))
   document.getElementById('abstract-autores').textContent = proyecto?.autores || ''
 
   // Remember which project is on screen so we can re-render on lang change
@@ -325,7 +325,24 @@ function loadEmbed(url, nombre) {
   }, 3500)
 }
 
+// Projects with `html: true` carry formatting (bold labels, lists) in their descriptions;
+// their text is our own static data. Everything else stays plain text.
+function setDescription(el, proyecto, text) {
+  if (!el) return
+  if (proyecto?.html) el.innerHTML = text || ''
+  else el.textContent = text
+}
+
 export function initProjectOverlay(overlayHooks) {
+  // LEER MÁS / LEER MENOS: shows the full description below the short one
+  document.getElementById('abstract-expand')?.addEventListener('click', () => {
+    const fullDesc = document.getElementById('abstract-descripcion-full')
+    const expandBtn = document.getElementById('abstract-expand')
+    if (!fullDesc) return
+    const open = fullDesc.style.display === 'none'
+    fullDesc.style.display = open ? 'block' : 'none'
+    expandBtn.textContent = open ? tr(I18N.readLess) : tr(I18N.readMore)
+  })
   hooks = overlayHooks
 
   // Scroll video overlay: cerrar al fondo
@@ -367,8 +384,8 @@ export function initProjectOverlay(overlayHooks) {
           subtituloEl.style.display = sub ? 'block' : 'none'
         }
         if (meta) meta.textContent = `${proyecto?.año||''} / ${tr(proyecto?.cliente)} / ${tr(proyecto?.tipo)}`
-        if (shortDesc) shortDesc.textContent = tr(proyecto?.descripcion)
-        if (fullDesc) fullDesc.textContent = tr(proyecto?.descripcionFull)
+        setDescription(shortDesc, proyecto, tr(proyecto?.descripcion))
+        setDescription(fullDesc, proyecto, tr(proyecto?.descripcionFull))
 
         if (expandBtn) {
           const showingFull = fullDesc && fullDesc.style.display !== 'none'

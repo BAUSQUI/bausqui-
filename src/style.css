@@ -1050,6 +1050,14 @@ canvas {
   line-height: 1.4;
   letter-spacing: 0.02em;
 }
+/* Formatted descriptions (projects with html: true): paragraphs, bold labels, bullets */
+#abstract-descripcion-full { margin-top: 0.9em; }
+#abstract-descripcion-full p,
+#abstract-descripcion-full ul { margin: 0 0 0.9em; }
+#abstract-descripcion-full ul { padding-left: 1.1em; list-style: disc; }
+#abstract-descripcion-full li { margin-bottom: 0.4em; }
+#abstract-descripcion strong,
+#abstract-descripcion-full strong { font-weight: 600; color: #ffffff; }
 
 #abstract-actions {
   display: flex;
