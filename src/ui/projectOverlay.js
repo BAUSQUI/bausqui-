@@ -252,7 +252,9 @@ function loadManual(manual, nombre) {
       return
     }
     img.onerror = () => tryLoadImage(img, wrapper, carpeta, numStr, extIndex + 1)
-    img.src = `${carpeta}${numStr}.${exts[extIndex]}`
+    // `manual.v`: bump it after replacing pages; images are cached for a year (vercel.json),
+    // so a new query string is what makes browsers fetch the new files
+    img.src = `${carpeta}${numStr}.${exts[extIndex]}${manual.v ? `?v=${manual.v}` : ''}`
   }
 
   for (let i = 1; i <= manual.frames; i++) {
